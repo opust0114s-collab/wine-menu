@@ -18,7 +18,7 @@
 2. **Workers & Pages → Create → Pages → Connect to Git** を開き、GitHubの `wine-menu` リポジトリを選びます。
    - Framework preset：`None`
    - Build command：空欄
-   - Build output directory：`public`
+   - Build output directory：空欄（そのまま）
 3. 作成したPagesプロジェクトの **Settings → Bindings → Add → D1 database** を開き、Variable name を `DB`、Database を `wine-menu-db` にします。
 4. **Settings → Variables and Secrets → Add** を開き、Type を `Secret`、Name を `ADMIN_PASSWORD` にして、Value に管理用パスワードを入れます。
 5. **Deployments** から最新のデプロイを選び、「Retry deployment」で再デプロイします。
