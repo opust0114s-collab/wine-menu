@@ -69,6 +69,7 @@ tr.off td:not(.keep){opacity:.45}
 .thumb.nophoto{outline:1px dashed var(--accent);background:transparent}
 .thumb:hover{outline-color:var(--accent)}
 .thumb.busy{opacity:.4}
+.thumb:disabled,.switch:disabled{cursor:not-allowed;opacity:.55}
 .photo-cta{display:flex;align-items:center;gap:10px;padding:10px 14px;margin-bottom:12px;border:1px solid var(--line);background:var(--surface);font-size:13px;color:var(--muted)}
 .photo-cta b{color:var(--accent);font-weight:600}
 .iname{font-weight:600;line-height:1.3}
@@ -282,7 +283,7 @@ tr.off td:not(.keep){opacity:.45}
 <!-- ============ ADMIN (PC) ============ -->
 <section id="admin" hidden>
   <header class="a-head">
-    <div class="brand">Wine Menu Studio<small>メニュー管理（PC用）</small></div>
+    <div class="brand">Wine Menu Studio<small id="roleLabel">メニュー管理（PC用）</small></div>
     <div class="spacer"></div>
     <button class="btn" id="btnCats" type="button">見出しの管理</button>
     <button class="btn" id="btnStores" type="button">店舗の管理</button>
@@ -456,7 +457,10 @@ function applyData(d){
   S.items = (d.items || []).sort(sortItems);
   S.sheets = (d.sheets || []).sort((a,b) => (a.order ?? 0) - (b.order ?? 0));
   S.version = d.version;
+  if (d.me){ S.role = d.me.role; S.myStore = d.me.storeId || null; if (S.role === "store") S.aStore = S.myStore; }
 }
+const isMaster = () => S.role !== "store";
+const canEdit = doc => isMaster() || ((doc.stores || []).length === 1 && doc.stores[0] === S.myStore);
 async function load(){
   const admin = S.view === "admin" && S.authed;
   try{
@@ -609,7 +613,11 @@ function renderAdmin(){
   $("#tableArea").hidden = S.aTab !== "items";
   $("#sheetArea").hidden = S.aTab !== "sheets";
   $("#btnAdd").textContent = S.aTab === "items" ? "＋ 商品を追加" : "＋ JPEGメニューを追加";
-  $("#storebar").innerHTML = [`<button type="button" class="pill" data-astore="all" aria-pressed="${S.aStore==="all"}">全店舗</button>`]
+  $("#btnCats").hidden = !isMaster(); $("#btnStores").hidden = !isMaster();
+  const mine = S.stores.find(x => x.id === S.myStore);
+  $("#roleLabel").textContent = isMaster() ? "マスター管理（全店舗）" : `${mine ? mine.name : "店舗"} の管理`;
+  $("#storebar").hidden = !isMaster();
+  if (isMaster()) $("#storebar").innerHTML = [`<button type="button" class="pill" data-astore="all" aria-pressed="${S.aStore==="all"}">全店舗</button>`]
     .concat(S.stores.map(s => `<button type="button" class="pill" data-astore="${esc(s.id)}" aria-pressed="${S.aStore===s.id}">${esc(s.name)}</button>`)).join("");
   if (S.aTab === "sheets") return renderSheetsAdmin();
   const fc = $("#fCat");
@@ -619,7 +627,7 @@ function renderAdmin(){
   const list = adminFiltered();
   $("#count").textContent = `${list.length} 件 / 全 ${S.items.length} 件`;
   if (!S.loaded){ $("#tableArea").innerHTML = `<div class="tablewrap"><div class="empty">読み込み中…</div></div>`; return; }
-  if (!S.stores.length){ $("#tableArea").innerHTML = `<div class="tablewrap"><div class="empty"><strong>まず店舗を登録しましょう</strong>右上の「店舗の管理」から店舗名を追加すると、商品を店舗ごとに振り分けられます。<br><br><button class="btn primary" type="button" data-act="stores">店舗を追加する</button></div></div>`; return; }
+  if (!S.stores.length && isMaster()){ $("#tableArea").innerHTML = `<div class="tablewrap"><div class="empty"><strong>まず店舗を登録しましょう</strong>右上の「店舗の管理」から店舗名を追加すると、商品を店舗ごとに振り分けられます。<br><br><button class="btn primary" type="button" data-act="stores">店舗を追加する</button></div></div>`; return; }
   if (!list.length){ $("#tableArea").innerHTML = `<div class="tablewrap"><div class="empty"><strong>${S.items.length ? "条件に合う商品がありません" : "まだ商品がありません"}</strong>「＋ 商品を追加」から写真・商品名・価格を登録してください。</div></div>`; return; }
   const sname = id => (S.stores.find(s => s.id === id) || {}).name;
   const noPh = list.filter(it => !it.photo).length;
@@ -627,13 +635,14 @@ function renderAdmin(){
     list.map(it => {
       const on = it.active !== false;
       const miss = [!it.desc_en && "英", !it.desc_zh && "中"].filter(Boolean);
-      return `<tr class="${on ? "" : "off"}"><td class="keep"><button type="button" class="thumb ${it.photo ? "" : "nophoto"}" data-photo="${esc(it.id)}" title="${it.photo ? "写真を変更" : "写真を追加"}">${it.photo ? photoHTML(it, "") : '<span>＋<br>写真</span>'}</button></td>
-      <td><div class="iname">${esc(it.name)} ${it.sample ? '<span class="tag sample">サンプル</span>' : ""}</div><div class="isub">${esc([it.name_ja, it.grape, it.vintage, it.region].filter(Boolean).join(" · "))}${miss.length ? ` <span class="tag">説明文 未翻訳: ${miss.join("・")}</span>` : ""}</div></td>
+      const ok = canEdit(it);
+      return `<tr class="${on ? "" : "off"}"><td class="keep"><button type="button" class="thumb ${it.photo ? "" : "nophoto"}" ${ok ? "" : "disabled"} data-photo="${esc(it.id)}" title="${it.photo ? "写真を変更" : "写真を追加"}">${it.photo ? photoHTML(it, "") : '<span>＋<br>写真</span>'}</button></td>
+      <td><div class="iname">${esc(it.name)} ${it.sample ? '<span class="tag sample">サンプル</span>' : ""}${ok ? "" : ' <span class="tag" title="複数店舗で共通の商品は、本部（マスター）が管理します">本部管理</span>'}</div><div class="isub">${esc([it.name_ja, it.grape, it.vintage, it.region].filter(Boolean).join(" · "))}${miss.length ? ` <span class="tag">説明文 未翻訳: ${miss.join("・")}</span>` : ""}</div></td>
       <td><span class="tag">${esc(catOf(it.cat).ja)}</span></td>
       <td class="isub">${esc((it.stores||[]).map(sname).filter(Boolean).join("、") || "未設定")}</td>
       <td class="price num">${yen(it.price_glass) || "—"}</td><td class="price num">${yen(it.price_bottle) || "—"}</td>
-      <td class="keep"><button type="button" class="switch" role="switch" aria-checked="${on}" aria-label="提供中" data-toggle="${esc(it.id)}"></button><span class="swlabel">${on ? "提供中" : "休止中"}</span></td>
-      <td class="keep"><button type="button" class="btn" data-edit="${esc(it.id)}">編集</button></td></tr>`;
+      <td class="keep"><button type="button" class="switch" role="switch" aria-checked="${on}" aria-label="提供中" ${ok ? "" : "disabled"} data-toggle="${esc(it.id)}"></button><span class="swlabel">${on ? "提供中" : "休止中"}</span></td>
+      <td class="keep">${ok ? `<button type="button" class="btn" data-edit="${esc(it.id)}">編集</button>` : ""}</td></tr>`;
     }).join("")}</tbody></table></div>`;
 }
 
@@ -649,7 +658,7 @@ function renderSheetsAdmin(){
     <div class="sb"><div class="iname">${esc(sh.title || "（無題）")}</div>
     <div class="sr"><span class="tag">${esc(SHEET_LANG[sh.lang || "all"])}</span>${sh.active === false ? '<span class="tag">非表示</span>' : ""}</div>
     <div class="isub">${esc((sh.stores || []).map(sname).filter(Boolean).join("、") || "店舗未設定")}</div>
-    <div class="sr"><button type="button" class="btn" data-smove="${esc(sh.id)}" data-dir="-1" ${i === 0 ? "disabled" : ""} aria-label="前へ">←</button><button type="button" class="btn" data-smove="${esc(sh.id)}" data-dir="1" ${i === list.length - 1 ? "disabled" : ""} aria-label="後ろへ">→</button><button type="button" class="btn" data-sedit="${esc(sh.id)}">設定</button></div></div></div>`).join("")}</div>`
+    ${canEdit(sh) ? `<div class="sr"><button type="button" class="btn" data-smove="${esc(sh.id)}" data-dir="-1" ${i === 0 ? "disabled" : ""} aria-label="前へ">←</button><button type="button" class="btn" data-smove="${esc(sh.id)}" data-dir="1" ${i === list.length - 1 ? "disabled" : ""} aria-label="後ろへ">→</button><button type="button" class="btn" data-sedit="${esc(sh.id)}">設定</button>` : `<div class="sr"><span class="tag">本部管理</span></div>`}</div></div></div>`).join("")}</div>`
     : `<div class="empty"><strong>画像メニューはまだありません</strong>コース表やおすすめボード、デザイナー制作のワインリストなど、画像のまま見せたいメニューを登録できます。</div>`}`;
   $("#sFiles").addEventListener("change", e => addSheets([...e.target.files]));
   const dz = $("#sDrop");
@@ -683,13 +692,13 @@ function openSheetEditor(id){
     <div class="field"><label for="shName">名前（管理用）</label><input id="shName" value="${esc(E.title || "")}" placeholder="例: 冬のシャンパーニュリスト"></div>
     <div class="field"><label for="shLang">表示する言語</label><select id="shLang">${Object.entries(SHEET_LANG).map(([k, v]) => `<option value="${k}" ${(E.lang || "all") === k ? "selected" : ""}>${v}${k === "all" ? "（どの言語でも表示）" : "（その言語を選んだときだけ表示）"}</option>`).join("")}</select>
       <span class="hint">日本語版と英語版を別々に作った場合は、それぞれの言語を設定してください。中国語版が無いときは英語版が表示されます。</span></div>
-    <div class="field"><span class="flabel">表示する店舗</span><div class="checks">${S.stores.map(s => `<label><input type="checkbox" name="shSt" value="${esc(s.id)}" ${(E.stores||[]).includes(s.id)?"checked":""}>${esc(s.name)}</label>`).join("")}</div></div>
+    <div class="field" ${isMaster() ? "" : "hidden"}><span class="flabel">表示する店舗</span><div class="checks">${S.stores.map(s => `<label><input type="checkbox" name="shSt" value="${esc(s.id)}" ${(E.stores||[]).includes(s.id)?"checked":""}>${esc(s.name)}</label>`).join("")}</div></div>
     <label class="checks"><label><input type="checkbox" id="shAct" ${E.active!==false?"checked":""}>お客様画面に表示する</label></label>
   </div>
   <div class="d-foot"><button type="button" class="btn danger" id="shDel">削除</button><span class="spacer"></span><span class="msg err" id="shErr"></span><button type="button" class="btn" data-close="1">キャンセル</button><button type="button" class="btn primary" id="shSave">保存</button></div></aside>`;
   $("#shSave").addEventListener("click", async () => {
     Object.assign(E, {title: $("#shName").value.trim(), lang: $("#shLang").value, active: $("#shAct").checked,
-      stores: [...document.querySelectorAll('input[name="shSt"]:checked')].map(c => c.value)});
+      stores: isMaster() ? [...document.querySelectorAll('input[name="shSt"]:checked')].map(c => c.value) : [S.myStore]});
     try{ await saveSheet(E); closeOverlay(); }catch(e){ $("#shErr").textContent = "保存できませんでした（" + (e.code || "エラー") + "）。"; }
   });
   const del = $("#shDel");
@@ -750,7 +759,7 @@ function openEditor(id){
       <div class="field"><label for="eDE">説明（English）</label><textarea id="eDE">${v("desc_en")}</textarea></div>
       <div class="field"><label for="eDZ">説明（中文）</label><textarea id="eDZ">${v("desc_zh")}</textarea></div>
     </div>
-    <div class="field"><span class="flabel">表示する店舗</span><div class="checks">${S.stores.map(s => `<label><input type="checkbox" name="eSt" value="${esc(s.id)}" ${(ED.stores||[]).includes(s.id)?"checked":""}>${esc(s.name)}</label>`).join("") || '<span class="hint">店舗が未登録です</span>'}</div></div>
+    <div class="field" ${isMaster() ? "" : "hidden"}><span class="flabel">表示する店舗</span><div class="checks">${S.stores.map(s => `<label><input type="checkbox" name="eSt" value="${esc(s.id)}" ${(ED.stores||[]).includes(s.id)?"checked":""}>${esc(s.name)}</label>`).join("") || '<span class="hint">店舗が未登録です</span>'}</div></div>
     <label class="checks"><label><input type="checkbox" id="eAct" ${ED.active!==false?"checked":""}>提供中（外すとお客様画面に表示されません）</label></label>
   </div>
   <div class="d-foot">${src ? `<button type="button" class="btn danger" id="btnDel">削除</button>` : ""}<span class="spacer"></span><span class="msg err" id="edErr"></span><button type="button" class="btn" data-close="1">キャンセル</button><button type="button" class="btn primary" id="btnSave">保存</button></div>
@@ -765,7 +774,7 @@ function readEditor(){
     price_glass: num($("#ePG").value), price_bottle: num($("#ePB").value),
     name_ja: $("#eNJ").value.trim(), name_zh: $("#eNZ").value.trim(),
     desc_ja: $("#eDJ").value.trim(), desc_en: $("#eDE").value.trim(), desc_zh: $("#eDZ").value.trim(),
-    stores: [...document.querySelectorAll('input[name="eSt"]:checked')].map(c => c.value), active: $("#eAct").checked,
+    stores: isMaster() ? [...document.querySelectorAll('input[name="eSt"]:checked')].map(c => c.value) : [S.myStore], active: $("#eAct").checked,
   });
   return ED;
 }
@@ -928,14 +937,18 @@ async function translateCat(id, btn){
 }
 
 /* ----- store manager ----- */
-function openStores(){
+let KEYS = new Set();
+async function openStores(){
+  try{ const r = await API.req("GET", "admin/storekeys"); KEYS = new Set(r.keys.map(k => k.store_id)); }catch(e){}
   const base = location.href.split("#")[0];
   $("#overlay").innerHTML = `<div class="scrim" data-close="1"></div><aside class="drawer" role="dialog" aria-modal="true" aria-labelledby="stTitle">
   <div class="d-head"><h2 id="stTitle">店舗の管理</h2><button type="button" class="btn ghost" data-close="1">閉じる</button></div>
   <div class="d-body">
-    <p class="hint" style="margin:0">店舗ごとにお客様画面を分けられます。各店舗のiPadでは「この店舗のお客様画面」のリンクを開いてください。</p>
+    <p class="hint" style="margin:0">店舗ごとにお客様画面を分けられます。各店舗のiPadでは「この店舗のお客様画面」のリンクを開いてください。<br>店舗責任者用のパスワードを発行すると、責任者は同じ管理画面にそのパスワードでログインし、自分の店舗のメニューだけを編集できます。パスワードは店舗ごとに別のものにしてください。</p>
     <div class="st-list">${S.stores.map(s => `<div class="field" style="gap:6px"><div class="st-row"><input value="${esc(s.name)}" data-stname="${esc(s.id)}" aria-label="店舗名"><button type="button" class="btn" data-stsave="${esc(s.id)}">名前を保存</button><button type="button" class="btn danger" data-stdel="${esc(s.id)}">削除</button></div>
-      <div class="linkbox"><button type="button" class="btn" data-stopen="${esc(s.id)}">この店舗のお客様画面</button><span>${esc(base)}#menu-${esc(s.id)}</span></div></div>`).join("") || '<span class="hint">まだ店舗がありません。</span>'}</div>
+      <div class="linkbox"><button type="button" class="btn" data-stopen="${esc(s.id)}">この店舗のお客様画面</button><span>${esc(base)}#menu-${esc(s.id)}</span></div>
+      <div class="st-row"><input type="text" autocomplete="off" data-stpw="${esc(s.id)}" placeholder="${KEYS.has(s.id) ? "設定済み（変更する場合は新しいパスワードを入力）" : "店舗責任者用のパスワード（6文字以上）"}" aria-label="店舗責任者用のパスワード"><button type="button" class="btn" data-stpwset="${esc(s.id)}">${KEYS.has(s.id) ? "変更" : "発行"}</button>${KEYS.has(s.id) ? `<button type="button" class="btn danger" data-stpwdel="${esc(s.id)}">無効化</button>` : ""}</div>
+      <span class="hint">${KEYS.has(s.id) ? "店舗責任者用パスワード：設定済み。責任者はこのパスワードでこの店舗だけを編集できます。" : "店舗責任者用パスワード：未設定"}</span></div>`).join("") || '<span class="hint">まだ店舗がありません。</span>'}</div>
     <div class="field"><label for="stNew">新しい店舗</label><div class="st-row"><input id="stNew" placeholder="例: 銀座店"><button type="button" class="btn primary" id="stAdd">追加</button></div></div>
     <span class="msg err" id="stErr"></span>
   </div></aside>`;
@@ -986,10 +999,22 @@ document.addEventListener("click", async e => {
     try{ await deleteStore(d.stdel); if (S.aStore === d.stdel) S.aStore = "all"; openStores(); }catch(err){ $("#stErr").textContent = "削除できませんでした。"; }
     return;
   }
+  if (d.stpwset){
+    const inp = document.querySelector(`[data-stpw="${CSS.escape(d.stpwset)}"]`); const pw = inp.value.normalize("NFKC").trim();
+    if (pw.length < 6){ $("#stErr").textContent = "パスワードは6文字以上にしてください。"; inp.focus(); return; }
+    try{ await API.req("PUT", "admin/storekey/" + encodeURIComponent(d.stpwset), {password: pw}); await openStores(); $("#stErr").textContent = ""; }
+    catch(err){ $("#stErr").textContent = err.code === "duplicate" ? "そのパスワードは別の店舗で使われています。別のものにしてください。" : err.code === "same_as_master" ? "マスターと同じパスワードは使えません。" : "設定できませんでした（" + (err.code || "エラー") + "）。"; }
+    return;
+  }
+  if (d.stpwdel){
+    if (!el.classList.contains("armed")){ el.classList.add("armed"); el.textContent = "もう一度押すと無効化"; return; }
+    try{ await API.req("DELETE", "admin/storekey/" + encodeURIComponent(d.stpwdel)); await openStores(); }catch(err){ $("#stErr").textContent = "無効化できませんでした。"; }
+    return;
+  }
   if (d.stopen){ S.storeId = d.stopen; LS.set("wm.store", d.stopen); closeOverlay(); go("menu-" + d.stopen); return; }
 });
 $("#btnAdd").addEventListener("click", () => {
-  if (!S.stores.length) return openStores();
+  if (!S.stores.length && isMaster()) return openStores();
   if (S.aTab === "sheets"){ const f = $("#sFiles"); if (f) f.click(); return; }
   openEditor(null);
 });
@@ -1007,15 +1032,15 @@ $("#tableArea").addEventListener("drop", e => { const b = e.target.closest("[dat
 $("#btnCats").addEventListener("click", openCats);
 $("#loginForm").addEventListener("submit", async e => {
   e.preventDefault();
-  const pw = $("#pw").value; $("#pwErr").textContent = "";
+  const pw = $("#pw").value.normalize("NFKC").trim(); $("#pwErr").textContent = "";
   try{
     const r = await fetch("/api/admin/all", {headers: {"x-admin-key": pw}, cache: "no-store"});
     if (r.status === 401){ $("#pwErr").textContent = "パスワードが違います。"; return; }
     if (!r.ok){ $("#pwErr").textContent = "ログインできませんでした（" + r.status + "）。"; return; }
-    LS.set("wm.key", pw); S.authed = true; applyData(await r.json()); S.loaded = true; S.live = true; $("#pw").value = ""; render();
+    LS.set("wm.key", pw); S.authed = true; S.fCat = "all"; S.aStore = "all"; applyData(await r.json()); S.loaded = true; S.live = true; $("#pw").value = ""; render();
   }catch(err){ $("#pwErr").textContent = "通信できませんでした。インターネット接続を確認してください。"; }
 });
-$("#btnLogout").addEventListener("click", () => { LS.set("wm.key", ""); S.authed = false; S.live = false; render(); });
+$("#btnLogout").addEventListener("click", () => { LS.set("wm.key", ""); S.authed = false; S.live = false; S.role = null; S.myStore = null; S.aStore = "all"; render(); });
 $("#btnOpenMenu").addEventListener("click", () => { const st = S.aStore !== "all" ? S.aStore : (currentStore() || {}).id; go(st ? "menu-" + st : "menu"); });
 $("#q").addEventListener("input", e => { S.q = e.target.value; renderAdmin(); });
 $("#fCat").addEventListener("change", e => { S.fCat = e.target.value; renderAdmin(); });

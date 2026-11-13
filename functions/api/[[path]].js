@@ -1,11 +1,14 @@
 // Wine Menu API (Cloudflare Pages Functions + D1)
 // Public:  GET /api/public, GET /api/version, GET /api/img/:id
-// Admin (header x-admin-key = ADMIN_PASSWORD):
+// Admin (header x-admin-key = master password ADMIN_PASSWORD, or a store manager's password):
+//   GET /api/admin/me                       -> {role: "master"|"store", storeId?}
 //   GET /api/admin/all
 //   PUT|DELETE /api/admin/doc/:kind/:id   (kind: stores | items | cats | sheets)
 //   POST /api/admin/image  (raw image body)  -> {id, url}
 //   DELETE /api/admin/image/:id
 //   GET /api/admin/usage
+//   Master only: GET /api/admin/storekeys, PUT|DELETE /api/admin/storekey/:storeId  {password}
+// Store managers may only change items / sheets that belong to their own store alone.
 
 const KINDS = new Set(["stores", "items", "cats", "sheets"]);
 const MAX_IMAGE = 1_500_000; // D1 rows are capped at 2MB; the browser compresses photos well below this
@@ -23,6 +26,7 @@ async function init(db) {
     db.prepare("CREATE TABLE IF NOT EXISTS docs (kind TEXT NOT NULL, id TEXT NOT NULL, data TEXT NOT NULL, updated_at INTEGER NOT NULL, PRIMARY KEY (kind, id))"),
     db.prepare("CREATE TABLE IF NOT EXISTS images (id TEXT PRIMARY KEY, mime TEXT NOT NULL, body BLOB NOT NULL, created_at INTEGER NOT NULL)"),
     db.prepare("CREATE TABLE IF NOT EXISTS meta (k TEXT PRIMARY KEY, v TEXT)"),
+    db.prepare("CREATE TABLE IF NOT EXISTS store_keys (store_id TEXT PRIMARY KEY, hash TEXT NOT NULL UNIQUE, updated_at INTEGER NOT NULL)"),
   ]);
   ready = true;
 }
@@ -46,6 +50,35 @@ async function loadAll(db, admin) {
   }
   out.version = await version(db);
   return out;
+}
+
+// passwords are compared after NFKC (full-width -> half-width) and trimming
+const norm = (s) => String(s || "").normalize("NFKC").trim();
+
+async function salt(db) {
+  const r = await db.prepare("SELECT v FROM meta WHERE k = 'salt'").first();
+  if (r) return r.v;
+  const v = crypto.randomUUID() + crypto.randomUUID();
+  await db.prepare("INSERT OR IGNORE INTO meta (k, v) VALUES ('salt', ?)").bind(v).run();
+  const again = await db.prepare("SELECT v FROM meta WHERE k = 'salt'").first();
+  return again.v;
+}
+async function hashKey(db, pw) {
+  const data = new TextEncoder().encode((await salt(db)) + ":" + norm(pw));
+  const buf = await crypto.subtle.digest("SHA-256", data);
+  return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+async function whoIs(db, env, key) {
+  key = norm(key);
+  if (!key) return null;
+  if (safeEqual(key, norm(env.ADMIN_PASSWORD))) return { role: "master" };
+  const r = await db.prepare("SELECT store_id FROM store_keys WHERE hash = ?").bind(await hashKey(db, key)).first();
+  return r ? { role: "store", storeId: r.store_id } : null;
+}
+const onlyMine = (doc, storeId) => !!doc && Array.isArray(doc.stores) && doc.stores.length === 1 && doc.stores[0] === storeId;
+async function getDoc(db, kind, id) {
+  const r = await db.prepare("SELECT data FROM docs WHERE kind = ? AND id = ?").bind(kind, id).first();
+  return r ? JSON.parse(r.data) : null;
 }
 
 function safeEqual(a, b) {
@@ -78,16 +111,62 @@ export async function onRequest(ctx) {
 
     if (parts[0] === "admin") {
       if (!env.ADMIN_PASSWORD) return json({ error: "password_not_set", message: "Set ADMIN_PASSWORD in the project's environment variables." }, 500);
-      if (!safeEqual(request.headers.get("x-admin-key") || "", env.ADMIN_PASSWORD)) return json({ error: "unauthorized" }, 401);
+      const who = await whoIs(db, env, request.headers.get("x-admin-key"));
+      if (!who) return json({ error: "unauthorized" }, 401);
+      const master = who.role === "master";
 
-      if (parts[1] === "all" && method === "GET") return json(await loadAll(db, true));
+      if (parts[1] === "me" && method === "GET") return json(who);
+
+      if (parts[1] === "all" && method === "GET") {
+        const all = await loadAll(db, true);
+        if (!master) {
+          all.stores = all.stores.filter((s) => s.id === who.storeId);
+          all.items = all.items.filter((d) => (d.stores || []).includes(who.storeId));
+          all.sheets = all.sheets.filter((d) => (d.stores || []).includes(who.storeId));
+        }
+        all.me = who;
+        return json(all);
+      }
+
+      if (parts[1] === "storekeys" && method === "GET") {
+        if (!master) return json({ error: "forbidden" }, 403);
+        const { results } = await db.prepare("SELECT store_id, updated_at FROM store_keys").all();
+        return json({ keys: results });
+      }
+      if (parts[1] === "storekey" && parts[2]) {
+        if (!master) return json({ error: "forbidden" }, 403);
+        const storeId = decodeURIComponent(parts[2]);
+        if (method === "DELETE") {
+          await db.prepare("DELETE FROM store_keys WHERE store_id = ?").bind(storeId).run();
+          return json({ ok: true });
+        }
+        if (method === "PUT") {
+          const { password } = await request.json();
+          const pw = norm(password);
+          if (pw.length < 6) return json({ error: "too_short" }, 400);
+          if (pw === norm(env.ADMIN_PASSWORD)) return json({ error: "same_as_master" }, 400);
+          const h = await hashKey(db, pw);
+          const clash = await db.prepare("SELECT store_id FROM store_keys WHERE hash = ? AND store_id != ?").bind(h, storeId).first();
+          if (clash) return json({ error: "duplicate" }, 409);
+          await db.prepare("INSERT INTO store_keys (store_id, hash, updated_at) VALUES (?, ?, ?) ON CONFLICT(store_id) DO UPDATE SET hash = excluded.hash, updated_at = excluded.updated_at")
+            .bind(storeId, h, Date.now()).run();
+          return json({ ok: true });
+        }
+      }
 
       if (parts[1] === "doc" && KINDS.has(parts[2]) && parts[3]) {
         const kind = parts[2], id = decodeURIComponent(parts[3]);
+        if (!master) {
+          // store managers: only items / image menus that belong to their own store alone
+          if (kind !== "items" && kind !== "sheets") return json({ error: "forbidden" }, 403);
+          const existing = await getDoc(db, kind, id);
+          if (existing && !onlyMine(existing, who.storeId)) return json({ error: "forbidden" }, 403);
+        }
         if (method === "PUT") {
           const body = await request.json();
           if (!body || typeof body !== "object" || Array.isArray(body)) return json({ error: "bad_body" }, 400);
           delete body.id;
+          if (!master) body.stores = [who.storeId];
           const text = JSON.stringify(body);
           if (text.length > 500_000) return json({ error: "too_large" }, 413);
           await db.batch([
@@ -114,6 +193,7 @@ export async function onRequest(ctx) {
         return json({ id, url: "/api/img/" + id });
       }
       if (parts[1] === "image" && parts[2] && method === "DELETE") {
+        if (!master) return json({ ok: true }); // store managers never delete shared image files
         await db.prepare("DELETE FROM images WHERE id = ?").bind(parts[2]).run();
         return json({ ok: true });
       }
