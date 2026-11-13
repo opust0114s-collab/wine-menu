@@ -15,7 +15,7 @@
 :root{
   color-scheme:dark;
   --bg:#0d1316; --surface:#121b1f; --fg:#ebe3d3; --muted:#8e958f; --line:#24313a; --accent:#c9a96b; --accent-fg:#16110a; --ok:#86b896; --warn:#d98c6c; --chip:#1a252a;
-  --m-bg:#0b1114; --m-bg2:#10181c; --m-card:#0f171b; --m-fg:#ece4d4; --m-muted:#8b938d; --m-gold:#c9a96b; --m-line:rgba(201,169,107,.26);
+  --m-bg:#0b1114; --m-bg2:#10181c; --m-card:#0f171b; --m-fg:#ece4d4; --m-muted:#8b938d; --m-gold:#c9a96b; --m-line:rgba(201,169,107,.26); --m-panel:rgba(16,24,28,.92); --m-ph1:#141e23;
   --f-caps:"Cinzel","Noto Serif JP","Noto Serif SC",Georgia,serif;
   --f-script:"Italianno","Cormorant Garamond",cursive;
   --f-display:"Cormorant Garamond","Noto Serif JP","Noto Serif SC",Georgia,serif;
@@ -134,6 +134,11 @@ tr.off td:not(.keep){opacity:.45}
 /* store manager */
 .st-list{display:grid;gap:8px}
 .st-row{display:flex;gap:8px;align-items:center}
+.bg-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.bg-row .sw{width:28px;height:28px;border-radius:50%;border:2px solid var(--line);padding:0;cursor:pointer;box-shadow:inset 0 0 0 1px rgba(201,169,107,.35)}
+.bg-row .sw.on{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent)}
+.bg-row .sw-custom{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);cursor:pointer}
+.bg-row .sw-custom input{width:32px;height:28px;padding:0;border:1px solid var(--line);border-radius:6px;background:none}
 .st-row input{flex:1;min-width:0;border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:7px 10px}
 .linkbox{display:flex;gap:6px;align-items:center;font-size:12px;color:var(--muted);word-break:break-all}
 
@@ -192,11 +197,11 @@ tr.off td:not(.keep){opacity:.45}
 .m-sec .sec-head{margin-bottom:34px}
 .tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:34px 26px;width:100%}
 .tile{display:grid;grid-template-columns:42% minmax(0,1fr);align-items:center;border:0;background:transparent;color:inherit;text-align:left;padding:0;min-width:0}
-.t-ph{position:relative;z-index:1;aspect-ratio:1/2.3;max-width:100%;overflow:hidden;display:grid;place-items:center;background:linear-gradient(180deg,#141e23,#0b1114);box-shadow:0 18px 40px rgba(0,0,0,.6)}
+.t-ph{position:relative;z-index:1;aspect-ratio:1/2.3;max-width:100%;overflow:hidden;display:grid;place-items:center;background:linear-gradient(180deg,var(--m-ph1),var(--m-bg));box-shadow:0 18px 40px rgba(0,0,0,.6)}
 .t-ph img{width:100%;height:100%;object-fit:cover;filter:brightness(.92) contrast(1.06)}
 .t-ph.none{background:transparent;box-shadow:none}
 .t-ph.none svg{width:70%;height:auto}
-.t-panel{margin-left:-14px;align-self:stretch;margin-block:14%;padding:16px 14px 14px 26px;display:flex;flex-direction:column;gap:4px;min-width:0;border:1px solid var(--m-line);background-color:rgba(16,24,28,.92);background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='8' viewBox='0 0 16 8'%3E%3Cpath d='M0 6l4-4 4 4 4-4 4 4' fill='none' stroke='%23c9a96b' stroke-width='.6' opacity='.16'/%3E%3C/svg%3E")}
+.t-panel{margin-left:-14px;align-self:stretch;margin-block:14%;padding:16px 14px 14px 26px;display:flex;flex-direction:column;gap:4px;min-width:0;border:1px solid var(--m-line);background-color:var(--m-panel);background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='8' viewBox='0 0 16 8'%3E%3Cpath d='M0 6l4-4 4 4 4-4 4 4' fill='none' stroke='%23c9a96b' stroke-width='.6' opacity='.16'/%3E%3C/svg%3E")}
 .t-name{font-family:var(--f-display);font-weight:600;font-size:clamp(17px,1.9vw,23px);line-height:1.15;color:var(--m-fg);text-wrap:balance;overflow-wrap:anywhere}
 .t-loc{font-size:12px;letter-spacing:.06em;color:var(--m-fg);opacity:.8;line-height:1.4}
 .lang-ja .t-loc{font-family:var(--f-serif-ja)}
@@ -318,7 +323,7 @@ tr.off td:not(.keep){opacity:.45}
       <button type="button" data-lang="zh"><span>中文</span></button>
     </div>
     <div class="m-title" id="mTitle" title="長押しで管理画面へ">
-      <div class="script" id="mEyebrow">Wine &amp; Spirits</div>
+      <div class="script" id="mEyebrow">Menu</div>
       <div class="flank"><span class="orn"></span><h1 id="mStore">&nbsp;</h1><span class="orn r"></span></div>
     </div>
   </header>
@@ -513,15 +518,47 @@ function currentStore(){
 }
 function locName(it, lang){ return lang === "ja" ? (it.name_ja || "") : lang === "zh" ? (it.name_zh || "") : ""; }
 function locDesc(it, lang){ return it["desc_" + lang] || it.desc_en || it.desc_ja || ""; }
+/* ----- background colour (per store, set by master) ----- */
+const BG_PRESETS = [
+  {hex:"#0b1114", name:"紺黒（標準）"},
+  {hex:"#1a0b10", name:"ボルドー"},
+  {hex:"#0a1712", name:"深緑"},
+  {hex:"#141414", name:"チャコール"},
+  {hex:"#0a0f1f", name:"ミッドナイトブルー"},
+  {hex:"#18110b", name:"ブラウン"},
+];
+const DEFAULT_BG = BG_PRESETS[0].hex;
+const okHex = h => typeof h === "string" && /^#[0-9a-f]{6}$/i.test(h);
+function mixHex(hex, to, a){
+  const n = parseInt(hex.slice(1), 16), m = parseInt(to.slice(1), 16);
+  const c = sh => Math.round(((n >> sh) & 255) * (1 - a) + ((m >> sh) & 255) * a);
+  return [c(16), c(8), c(0)];
+}
+const rgb = (a, al) => al == null ? `rgb(${a.join(",")})` : `rgba(${a.join(",")},${al})`;
+function applyBg(st){
+  const base = st && okHex(st.bg) ? st.bg.toLowerCase() : DEFAULT_BG;
+  const r = document.documentElement.style;
+  if (base === DEFAULT_BG){ ["--m-bg","--m-bg2","--m-card","--m-panel","--m-ph1"].forEach(k => r.removeProperty(k)); }
+  else{
+    r.setProperty("--m-bg", base);
+    r.setProperty("--m-bg2", rgb(mixHex(base, "#ffffff", .025)));
+    r.setProperty("--m-card", rgb(mixHex(base, "#ffffff", .015)));
+    r.setProperty("--m-panel", rgb(mixHex(base, "#ffffff", .025), .92));
+    r.setProperty("--m-ph1", rgb(mixHex(base, "#ffffff", .045)));
+  }
+  const tc = document.querySelector('meta[name="theme-color"]'); if (tc) tc.content = base;
+}
+
 function renderMenu(){
   const L = S.lang, t = T[L];
   document.documentElement.lang = L === "zh" ? "zh-CN" : L;
   $("#menu").className = "lang-" + L;
   document.querySelectorAll(".langs button").forEach(b => b.setAttribute("aria-pressed", b.dataset.lang === L));
   const st = currentStore();
-  $("#mEyebrow").textContent = "Wine & Spirits";
+  $("#mEyebrow").textContent = "Menu";
+  applyBg(st);
   $("#mStore").textContent = st ? st.name : (S.loaded ? "Wine List" : " ");
-  $("#mTax").textContent = t.tax;
+  $("#mTax").textContent = "";
   $("#mHint").textContent = t.hint;
   const items = st ? S.items.filter(it => it.active !== false && (it.stores || []).includes(st.id)) : [];
   const sheets = st ? menuSheets(st.id, L) : [];
@@ -549,7 +586,7 @@ function renderMenu(){
     const sub = L === "en" ? c.ja : c.en;
     const feat = list.find(it => it.photo);
     return `<section class="m-sec">
-      <div class="sec-head"><div class="script">Our Selection</div><div class="flank"><span class="orn"></span><h2>${esc(c[L])}</h2><span class="orn r"></span></div>${sub && sub !== c[L] ? `<div class="sub">${esc(sub)}</div>` : ""}</div>
+      <div class="sec-head"><div class="script">Line up</div><div class="flank"><span class="orn"></span><h2>${esc(c[L])}</h2><span class="orn r"></span></div>${sub && sub !== c[L] ? `<div class="sub">${esc(sub)}</div>` : ""}</div>
       <div class="tiles">${list.map(it => card(it, L, t)).join("")}</div>
     </section>`;
   }).join("");
@@ -745,8 +782,8 @@ function openEditor(id){
     </div>
     <div class="field"><label for="eReg">産地</label><input id="eReg" value="${v("region")}" placeholder="例: Champagne, France"></div>
     <div class="row">
-      <div class="field"><label for="ePG">グラス価格（円・税込）</label><input id="ePG" class="num" inputmode="numeric" value="${v("price_glass")}" placeholder="空欄ならグラス提供なし"></div>
-      <div class="field"><label for="ePB">ボトル価格（円・税込）</label><input id="ePB" class="num" inputmode="numeric" value="${v("price_bottle")}" placeholder="例: 38000"></div>
+      <div class="field"><label for="ePG">グラス価格（円）</label><input id="ePG" class="num" inputmode="numeric" value="${v("price_glass")}" placeholder="空欄ならグラス提供なし"></div>
+      <div class="field"><label for="ePB">ボトル価格（円）</label><input id="ePB" class="num" inputmode="numeric" value="${v("price_bottle")}" placeholder="例: 38000"></div>
     </div>
     <div class="langblock">
       <div class="lb-head"><span class="flabel">お客様向けの表示（日本語・英語・中国語）</span><button type="button" class="btn" id="btnTr">日本語から英語・中国語へ自動翻訳</button></div>
@@ -948,7 +985,8 @@ async function openStores(){
     <div class="st-list">${S.stores.map(s => `<div class="field" style="gap:6px"><div class="st-row"><input value="${esc(s.name)}" data-stname="${esc(s.id)}" aria-label="店舗名"><button type="button" class="btn" data-stsave="${esc(s.id)}">名前を保存</button><button type="button" class="btn danger" data-stdel="${esc(s.id)}">削除</button></div>
       <div class="linkbox"><button type="button" class="btn" data-stopen="${esc(s.id)}">この店舗のお客様画面</button><span>${esc(base)}#menu-${esc(s.id)}</span></div>
       <div class="st-row"><input type="text" autocomplete="off" data-stpw="${esc(s.id)}" placeholder="${KEYS.has(s.id) ? "設定済み（変更する場合は新しいパスワードを入力）" : "店舗責任者用のパスワード（6文字以上）"}" aria-label="店舗責任者用のパスワード"><button type="button" class="btn" data-stpwset="${esc(s.id)}">${KEYS.has(s.id) ? "変更" : "発行"}</button>${KEYS.has(s.id) ? `<button type="button" class="btn danger" data-stpwdel="${esc(s.id)}">無効化</button>` : ""}</div>
-      <span class="hint">${KEYS.has(s.id) ? "店舗責任者用パスワード：設定済み。責任者はこのパスワードでこの店舗だけを編集できます。" : "店舗責任者用パスワード：未設定"}</span></div>`).join("") || '<span class="hint">まだ店舗がありません。</span>'}</div>
+      <span class="hint">${KEYS.has(s.id) ? "店舗責任者用パスワード：設定済み。責任者はこのパスワードでこの店舗だけを編集できます。" : "店舗責任者用パスワード：未設定"}</span>
+      <div class="bg-row"><span class="hint">お客様画面の背景色</span>${BG_PRESETS.map(p => `<button type="button" class="sw${(okHex(s.bg) ? s.bg.toLowerCase() : DEFAULT_BG) === p.hex ? " on" : ""}" style="background:${p.hex}" data-stbg="${esc(s.id)}" data-hex="${p.hex}" title="${p.name}" aria-label="${p.name}"></button>`).join("")}<label class="sw-custom" title="自由に色を選ぶ"><input type="color" value="${okHex(s.bg) ? s.bg : DEFAULT_BG}" data-stbgc="${esc(s.id)}" aria-label="背景色を自由に選ぶ">自由に選ぶ</label></div></div>`).join("") || '<span class="hint">まだ店舗がありません。</span>'}</div>
     <div class="field"><label for="stNew">新しい店舗</label><div class="st-row"><input id="stNew" placeholder="例: 銀座店"><button type="button" class="btn primary" id="stAdd">追加</button></div></div>
     <span class="msg err" id="stErr"></span>
   </div></aside>`;
@@ -962,6 +1000,12 @@ async function openStores(){
 }
 
 /* ---------------- events ---------------- */
+document.addEventListener("change", async e => {
+  const id = e.target.dataset && e.target.dataset.stbgc; if (!id) return;
+  const st = S.stores.find(s => s.id === id); const hex = e.target.value;
+  if (!st || !okHex(hex)) return;
+  try{ await saveStore({...st, bg: hex.toLowerCase()}); openStores(); }catch(err){ $("#stErr").textContent = "背景色を保存できませんでした。"; }
+});
 document.addEventListener("click", async e => {
   const el = e.target.closest("button,[data-close]"); if (!el) return;
   const d = el.dataset;
@@ -987,6 +1031,11 @@ document.addEventListener("click", async e => {
     const it = S.items.find(x => x.id === d.toggle); if (!it) return;
     const next = {...it, active: it.active === false}; delete next.sample;
     try{ await saveItem(next); }catch(err){ banner("切り替えを保存できませんでした（" + (err.code || "エラー") + "）。"); }
+    return;
+  }
+  if (d.stbg){
+    const st = S.stores.find(s => s.id === d.stbg); if (!st) return;
+    try{ await saveStore({...st, bg: d.hex}); openStores(); }catch(err){ $("#stErr").textContent = "背景色を保存できませんでした。"; }
     return;
   }
   if (d.stsave){
