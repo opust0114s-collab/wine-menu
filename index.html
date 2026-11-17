@@ -110,6 +110,16 @@ tr.off td:not(.keep){opacity:.45}
 .langblock{border:1px solid var(--line);border-radius:10px;padding:12px;display:grid;gap:10px;background:var(--surface)}
 .langblock .lb-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .langblock .lb-head .flabel{flex:1}
+.ltabs{display:flex;gap:6px;flex-wrap:wrap}
+.ltabs button{border:1px solid var(--line);background:transparent;border-radius:999px;padding:5px 14px;font-size:13px;color:var(--muted)}
+.ltabs button[aria-pressed="true"]{border-color:var(--accent);color:var(--fg);font-weight:600}
+.ltabs button.filled::after{content:"●";color:var(--accent);font-size:8px;margin-left:5px;vertical-align:middle}
+.steps{display:grid;gap:14px;margin:0;padding:0;list-style:none}
+.steps li{border:1px solid var(--line);border-radius:10px;padding:14px;background:var(--surface);display:grid;gap:8px;justify-items:start}
+.steps li b{font-size:14px}
+.xl-list{max-height:260px;overflow:auto;border:1px solid var(--line);border-radius:8px;padding:8px 12px;font-size:13px;width:100%;box-sizing:border-box}
+.xl-list div{padding:3px 0;border-bottom:1px solid var(--line)}
+.xl-list div:last-child{border-bottom:0}
 .checks{display:flex;flex-wrap:wrap;gap:8px}
 .checks label{display:inline-flex;gap:6px;align-items:center;border:1px solid var(--line);border-radius:8px;padding:5px 10px;background:var(--surface);font-size:13px}
 .msg{font-size:12px}
@@ -243,6 +253,24 @@ tr.off td:not(.keep){opacity:.45}
 .lang-en .d-desc{font-family:var(--f-display);font-size:18px;line-height:1.7}
 .lang-zh .d-desc{font-family:var(--f-serif-zh)}
 .lang-ja .d-desc{font-family:var(--f-serif-ja)}
+.d-notes{display:grid;gap:12px;margin:0}
+.d-notes div{display:grid;grid-template-columns:minmax(76px,auto) 1fr;gap:14px;align-items:baseline}
+.d-notes dt{font-family:var(--f-caps);font-size:11px;letter-spacing:.2em;color:var(--m-gold);white-space:nowrap}
+.lang-ja .d-notes dt{font-family:var(--f-serif-ja);letter-spacing:.12em;font-size:13px}
+.lang-zh .d-notes dt{font-family:var(--f-serif-zh);letter-spacing:.12em;font-size:13px}
+.d-notes dd{margin:0;font-size:14px;line-height:1.85;opacity:.86;white-space:pre-wrap}
+.lang-en .d-notes dd{font-family:var(--f-display);font-size:17px;line-height:1.6}
+.lang-ja .d-notes dd{font-family:var(--f-serif-ja)}
+.lang-zh .d-notes dd{font-family:var(--f-serif-zh)}
+.d-notes .pair dd{color:var(--m-gold);opacity:1}
+.d-scales{display:grid;gap:8px;max-width:360px}
+.d-scale{display:grid;grid-template-columns:64px 1fr 64px;gap:10px;align-items:center;font-size:11px;color:var(--m-muted);letter-spacing:.08em}
+.d-scale span:last-child{text-align:right}
+.d-scale i{display:grid;grid-template-columns:repeat(5,1fr);gap:4px}
+.d-scale i b{height:4px;background:var(--m-line)}
+.d-scale i b.on{background:var(--m-gold)}
+.d-som{font-family:var(--f-display);font-style:italic;font-size:15px;color:var(--m-muted)}
+.d-som b{font-style:normal;font-weight:500;color:var(--m-fg);letter-spacing:.06em}
 .d-prices{display:flex;gap:40px;border-top:1px solid var(--m-line);padding-top:18px;margin-top:auto}
 .d-prices div{display:grid;gap:2px}
 .d-prices small{font-family:var(--f-caps);font-size:10px;color:var(--m-muted);letter-spacing:.24em}
@@ -297,6 +325,7 @@ tr.off td:not(.keep){opacity:.45}
     <button class="btn" id="btnCats" type="button">見出しの管理</button>
     <button class="btn" id="btnStores" type="button">店舗の管理</button>
     <button class="btn" id="btnOpenMenu" type="button">お客様画面を見る →</button>
+    <button class="btn" id="btnXl" type="button">Excelで説明を入力</button>
     <button class="btn primary" id="btnAdd" type="button">＋ 商品を追加</button>
     <button class="btn ghost" id="btnLogout" type="button">ログアウト</button>
   </header>
@@ -355,9 +384,9 @@ let CAT = Object.fromEntries(CATS.map(c => [c.id, c]));
 function setCats(list){ CATS = list; CAT = Object.fromEntries(CATS.map(c => [c.id, c])); }
 const catOf = id => CAT[id] || {id, ja:"その他", en:"Others", zh:"其他", style:"other"};
 const T = {
-  ja:{book:"メニューブック", list:"ドリンクリスト", all:"すべて", bottle:"ボトル", glass:"グラス", tax:"表示価格は税込です。", close:"閉じる", empty:"ただいまメニューを準備中です", emptySub:"スタッフにお声がけください。", vintage:"ヴィンテージ", hint:"店名を長押しすると管理画面に戻ります"},
-  en:{book:"Menu Book", list:"Wine & Spirits", all:"All", bottle:"Bottle", glass:"Glass", tax:"All prices include tax.", close:"Close", empty:"Our list is being updated", emptySub:"Please ask our staff for today's selection.", vintage:"Vintage", hint:"Press and hold the store name for staff mode"},
-  zh:{book:"菜单册", list:"酒单", all:"全部", bottle:"整瓶", glass:"单杯", tax:"价格均已含税。", close:"关闭", empty:"酒单更新中", emptySub:"请向服务人员咨询。", vintage:"年份", hint:"长按店名进入管理画面"},
+  ja:{book:"メニューブック", list:"ドリンクリスト", all:"すべて", bottle:"ボトル", glass:"グラス", tax:"表示価格は税込です。", close:"閉じる", empty:"ただいまメニューを準備中です", emptySub:"スタッフにお声がけください。", vintage:"ヴィンテージ", hint:"店名を長押しすると管理画面に戻ります", nose:"香り", palate:"味わい", pair:"合う料理", som:"ソムリエ", dry:"辛口", sweet:"甘口", light:"軽やか", full:"しっかり"},
+  en:{book:"Menu Book", list:"Wine & Spirits", all:"All", bottle:"Bottle", glass:"Glass", tax:"All prices include tax.", close:"Close", empty:"Our list is being updated", emptySub:"Please ask our staff for today's selection.", vintage:"Vintage", hint:"Press and hold the store name for staff mode", nose:"Nose", palate:"Palate", pair:"Pairing", som:"Sommelier", dry:"Dry", sweet:"Sweet", light:"Light", full:"Full"},
+  zh:{book:"菜单册", list:"酒单", all:"全部", bottle:"整瓶", glass:"单杯", tax:"价格均已含税。", close:"关闭", empty:"酒单更新中", emptySub:"请向服务人员咨询。", vintage:"年份", hint:"长按店名进入管理画面", nose:"香气", palate:"口感", pair:"推荐配餐", som:"侍酒师", dry:"干", sweet:"甜", light:"轻盈", full:"饱满"},
 };
 const SHEET_LANG = {all:"全言語共通", ja:"日本語版", en:"英語版", zh:"中国語版"};
 const LS = {
@@ -531,7 +560,14 @@ function currentStore(){
   return S.stores.find(s => s.id === S.storeId) || S.stores[0];
 }
 function locName(it, lang){ return lang === "ja" ? (it.name_ja || "") : lang === "zh" ? (it.name_zh || "") : ""; }
-function locDesc(it, lang){ return it["desc_" + lang] || it.desc_en || it.desc_ja || ""; }
+function locDesc(it, lang){ return locNote(it, "desc", lang); }
+function locNote(it, k, lang){ return it[k + "_" + lang] || it[k + "_en"] || it[k + "_ja"] || ""; }
+// sommelier notes, shown on the guest detail screen. desc = the sommelier's comment (kept from the first version)
+const NOTES = [["desc", "コメント", "全体の印象やおすすめの飲み方"], ["nose", "香り", "例: 熟した洋梨、白い花、ブリオッシュ"], ["palate", "味わい", "例: きめ細かな泡、引き締まった酸、長い余韻"], ["pair", "合う料理", "例: 生牡蠣、天ぷら、白身魚のカルパッチョ"]];
+const NOTE_LANGS = [["ja", "日本語"], ["en", "English"], ["zh", "中文"]];
+const DRY = ["", "辛口", "やや辛口", "中間", "やや甘口", "甘口"], BODY = ["", "軽やか", "やや軽やか", "ミディアム", "ややしっかり", "しっかり"];
+const lvl = n => { n = Number(n); return Number.isInteger(n) && n >= 1 && n <= 5 ? n : null; };
+const missingLangs = it => ["en", "zh"].filter(L => NOTES.some(([k]) => it[k + "_ja"] && !it[k + "_" + L])).map(L => L === "en" ? "英" : "中");
 /* ----- background colour (per store, set by master) ----- */
 const BG_PRESETS = [
   {hex:"#0b1114", name:"紺黒（標準）"},
@@ -635,6 +671,8 @@ function openDetail(id){
   const it = S.items.find(x => x.id === id); if (!it) return;
   const L = S.lang, t = T[L], ln = locName(it, L), desc = locDesc(it, L);
   const meta = [it.grape, it.vintage ? `${t.vintage} ${it.vintage}` : "", it.region].filter(Boolean).join(" · ");
+  const notes = ["nose", "palate", "pair"].map(k => [k, locNote(it, k, L)]).filter(x => x[1]);
+  const scales = [[t.dry, lvl(it.dry), t.sweet], [t.light, lvl(it.body), t.full]].filter(x => x[1]);
   $("#overlay").innerHTML = `<div class="m-detail lang-${L}" data-close="1"><div class="d-card" role="dialog" aria-modal="true" aria-label="${esc(it.name)}">
     <div class="ph">${photoHTML(it, it.name)}</div>
     <div class="d-info"><button type="button" class="d-close" data-close="1">${esc(t.close)}</button>
@@ -642,6 +680,9 @@ function openDetail(id){
       ${ln ? `<div class="d-loc">${esc(ln)}</div>` : ""}${meta ? `<div class="d-meta">${esc(meta)}</div>` : ""}
       <div class="d-rule"></div>
       ${desc ? `<div class="d-desc">${esc(desc)}</div>` : ""}
+      ${notes.length ? `<dl class="d-notes">${notes.map(([k, txt]) => `<div class="${k}"><dt>${esc(t[k])}</dt><dd>${esc(txt)}</dd></div>`).join("")}</dl>` : ""}
+      ${scales.length ? `<div class="d-scales">${scales.map(([a, n, b]) => `<div class="d-scale" aria-label="${esc(a)} ${n}/5 ${esc(b)}"><span>${esc(a)}</span><i>${[1,2,3,4,5].map(x => `<b class="${x === n ? "on" : ""}"></b>`).join("")}</i><span>${esc(b)}</span></div>`).join("")}</div>` : ""}
+      ${it.sommelier ? `<div class="d-som">${esc(t.som)} <b>${esc(it.sommelier)}</b></div>` : ""}
       <div class="d-prices">${it.price_glass ? `<div><small>${esc(t.glass)}</small><b>${yen(it.price_glass)}</b></div>` : ""}${it.price_bottle ? `<div><small>${esc(t.bottle)}</small><b>${yen(it.price_bottle)}</b></div>` : ""}</div>
     </div></div></div>`;
   $(".d-close").focus();
@@ -664,7 +705,7 @@ function renderAdmin(){
   $("#tableArea").hidden = S.aTab !== "items";
   $("#sheetArea").hidden = S.aTab !== "sheets";
   $("#btnAdd").textContent = S.aTab === "items" ? "＋ 商品を追加" : "＋ JPEGメニューを追加";
-  $("#btnCats").hidden = !isMaster(); $("#btnStores").hidden = !isMaster();
+  $("#btnCats").hidden = !isMaster(); $("#btnStores").hidden = !isMaster(); $("#btnXl").hidden = S.aTab !== "items";
   const mine = S.stores.find(x => x.id === S.myStore);
   $("#roleLabel").textContent = isMaster() ? "マスター管理（全店舗）" : `${mine ? mine.name : "店舗"} の管理`;
   $("#storebar").hidden = !isMaster();
@@ -686,7 +727,7 @@ function renderAdmin(){
     list.map((it, i) => {
       const on = it.active !== false;
       const up = canEdit(it) && list[i - 1] && list[i - 1].cat === it.cat, down = canEdit(it) && list[i + 1] && list[i + 1].cat === it.cat;
-      const miss = [!it.desc_en && "英", !it.desc_zh && "中"].filter(Boolean);
+      const miss = missingLangs(it);
       const ok = canEdit(it);
       return `<tr class="${on ? "" : "off"}"><td class="keep"><div class="mv"><button type="button" class="btn" data-imove="${esc(it.id)}" data-dir="-1" ${up ? "" : "disabled"} aria-label="上へ" title="1つ上へ">↑</button><button type="button" class="btn" data-imove="${esc(it.id)}" data-dir="1" ${down ? "" : "disabled"} aria-label="下へ" title="1つ下へ">↓</button></div></td><td class="keep"><button type="button" class="thumb ${it.photo ? "" : "nophoto"}" ${ok ? "" : "disabled"} data-photo="${esc(it.id)}" title="${it.photo ? "写真を変更" : "写真を追加"}">${it.photo ? photoHTML(it, "") : '<span>＋<br>写真</span>'}</button></td>
       <td><div class="iname">${esc(it.name)} ${it.sample ? '<span class="tag sample">サンプル</span>' : ""}${ok ? "" : ' <span class="tag" title="複数店舗で共通の商品は、本部（マスター）が管理します">本部管理</span>'}</div><div class="isub">${esc([it.name_ja, it.grape, it.vintage, it.region].filter(Boolean).join(" · "))}${miss.length ? ` <span class="tag">説明文 未翻訳: ${miss.join("・")}</span>` : ""}</div></td>
@@ -829,9 +870,17 @@ function openEditor(id){
         <div class="field"><label for="eNJ">日本語名（カナ）</label><input id="eNJ" value="${v("name_ja")}" placeholder="ドン・ペリニヨン"></div>
         <div class="field"><label for="eNZ">中文名</label><input id="eNZ" value="${v("name_zh")}" placeholder="唐培里侬"></div>
       </div>
-      <div class="field"><label for="eDJ">説明（日本語）</label><textarea id="eDJ" placeholder="味わい・おすすめの料理など">${v("desc_ja")}</textarea></div>
-      <div class="field"><label for="eDE">説明（English）</label><textarea id="eDE">${v("desc_en")}</textarea></div>
-      <div class="field"><label for="eDZ">説明（中文）</label><textarea id="eDZ">${v("desc_zh")}</textarea></div>
+    </div>
+    <div class="langblock">
+      <div class="lb-head"><span class="flabel">ソムリエの解説（お客様が商品を押すと表示されます。空欄の項目は表示されません）</span></div>
+      <div class="row">
+        <div class="field"><label for="eSom">担当ソムリエ</label><input id="eSom" value="${v("sommelier")}" placeholder="例: 山田 / Yamada"></div>
+        <div class="field"><label for="eDry">辛口・甘口</label><select id="eDry">${DRY.map((l, i) => `<option value="${i || ""}" ${lvl(ED.dry) === i || (!i && !lvl(ED.dry)) ? "selected" : ""}>${i ? `${i}：${l}` : "表示しない"}</option>`).join("")}</select></div>
+        <div class="field"><label for="eBody">ボディ（重さ）</label><select id="eBody">${BODY.map((l, i) => `<option value="${i || ""}" ${lvl(ED.body) === i || (!i && !lvl(ED.body)) ? "selected" : ""}>${i ? `${i}：${l}` : "表示しない"}</option>`).join("")}</select></div>
+      </div>
+      <div class="ltabs" role="group" aria-label="言語">${NOTE_LANGS.map(([L, name], i) => `<button type="button" data-eltab="${L}" aria-pressed="${i === 0}" class="${NOTES.some(([k]) => ED[k + "_" + L]) ? "filled" : ""}">${name}</button>`).join("")}</div>
+      ${NOTE_LANGS.map(([L, name], i) => `<div class="lpane" data-lpane="${L}" ${i ? "hidden" : ""}>${NOTES.map(([k, label, ph]) => `<div class="field"><label for="e_${k}_${L}">${label}（${name}）</label><textarea id="e_${k}_${L}" placeholder="${L === "ja" ? esc(ph) : ""}">${v(k + "_" + L)}</textarea></div>`).join("")}</div>`).join("")}
+      <span class="hint">英語・中国語が空欄の項目は、お客様画面では英語（なければ日本語）で表示されます。</span>
     </div>
     <div class="field" ${isMaster() ? "" : "hidden"}><span class="flabel">表示する店舗</span><div class="checks">${S.stores.map(s => `<label><input type="checkbox" name="eSt" value="${esc(s.id)}" ${(ED.stores||[]).includes(s.id)?"checked":""}>${esc(s.name)}</label>`).join("") || '<span class="hint">店舗が未登録です</span>'}</div></div>
     <label class="checks"><label><input type="checkbox" id="eAct" ${ED.active!==false?"checked":""}>提供中（外すとお客様画面に表示されません）</label></label>
@@ -847,9 +896,10 @@ function readEditor(){
     name: $("#eName").value.trim(), cat: $("#eCat").value, vintage: $("#eVin").value.trim(), grape: $("#eGr").value.trim(), region: $("#eReg").value.trim(),
     price_glass: num($("#ePG").value), price_bottle: num($("#ePB").value),
     name_ja: $("#eNJ").value.trim(), name_zh: $("#eNZ").value.trim(),
-    desc_ja: $("#eDJ").value.trim(), desc_en: $("#eDE").value.trim(), desc_zh: $("#eDZ").value.trim(),
+    sommelier: $("#eSom").value.trim(), dry: lvl($("#eDry").value), body: lvl($("#eBody").value),
     stores: isMaster() ? [...document.querySelectorAll('input[name="eSt"]:checked')].map(c => c.value) : [S.myStore], active: $("#eAct").checked,
   });
+  NOTES.forEach(([k]) => NOTE_LANGS.forEach(([L]) => { ED[k + "_" + L] = $(`#e_${k}_${L}`).value.trim(); }));
   return ED;
 }
 async function shrink(file, max){
@@ -911,23 +961,21 @@ function wireEditor(){
 async function translate(){
   readEditor();
   const m = $("#trMsg"); m.className = "msg";
-  if (!ED.name && !ED.desc_ja){ m.className = "msg err"; m.textContent = "商品名か日本語の説明を先に入力してください。"; return; }
+  if (!ED.name && !NOTES.some(([k]) => ED[k + "_ja"])){ m.className = "msg err"; m.textContent = "商品名か日本語の説明を先に入力してください。"; return; }
   const b = $("#btnTr"); b.disabled = true; m.textContent = "翻訳中…（10秒ほどかかります）";
   try{
     const out = await S.sample.json(
 `You translate restaurant wine-list entries for a Japanese restaurant serving international guests.
-Wine: ${JSON.stringify({name: ED.name, region: ED.region, vintage: ED.vintage, category: catOf(ED.cat).en, japanese_name: ED.name_ja, description_ja: ED.desc_ja})}
+Wine: ${JSON.stringify({name: ED.name, region: ED.region, vintage: ED.vintage, category: catOf(ED.cat).en, japanese_name: ED.name_ja, desc_ja: ED.desc_ja, nose_ja: ED.nose_ja, palate_ja: ED.palate_ja, pair_ja: ED.pair_ja})}
 Return JSON only, with these string keys:
 "name_ja": the wine name in Japanese katakana as commonly written in Japan (keep existing japanese_name if given),
 "name_zh": the wine name in Simplified Chinese as commonly used in mainland China,
-"desc_en": natural, elegant English translation of description_ja (empty string if none),
-"desc_zh": natural Simplified Chinese translation of description_ja (empty string if none).
+For each of desc, nose, palate, pair: "<key>_en" = natural, elegant English translation of "<key>_ja" in a sommelier's voice, and "<key>_zh" = natural Simplified Chinese translation (empty string if the Japanese is empty).
 Do not add facts that are not in the input.`, {modelTier: "quick"});
     if (out && typeof out === "object"){
       if (!ED.name_ja && out.name_ja) $("#eNJ").value = out.name_ja;
       if (!ED.name_zh && out.name_zh) $("#eNZ").value = out.name_zh;
-      if (out.desc_en) $("#eDE").value = out.desc_en;
-      if (out.desc_zh) $("#eDZ").value = out.desc_zh;
+      NOTES.forEach(([k]) => ["en", "zh"].forEach(L => { if (out[k + "_" + L]) $(`#e_${k}_${L}`).value = out[k + "_" + L]; }));
       m.textContent = "翻訳しました。内容を確認してから保存してください。";
     }
   }catch(e){
@@ -935,6 +983,135 @@ Do not add facts that are not in the input.`, {modelTier: "quick"});
     m.textContent = e && e.code === "not_granted" ? "自動翻訳が許可されていません。手入力してください。" : e && e.code === "rate_limited" ? "混み合っています。少し待ってからもう一度お試しください。" : "翻訳できませんでした。手入力するか、もう一度お試しください。";
   }
   b.disabled = false;
+}
+
+/* ----- sommelier notes via Excel ----- */
+// one row per item; matched back by 管理番号 (item id). Header text decides the column, so columns may be moved.
+const XL_COLS = [
+  ["id", "管理番号（変更しないでください）", 18], ["name", "商品名", 30], ["cat", "見出し", 12], ["vintage", "ヴィンテージ", 10],
+  ["sommelier", "担当ソムリエ", 14], ["dry", "辛口・甘口（1辛口〜5甘口）", 14], ["body", "ボディ（1軽やか〜5しっかり）", 14],
+].concat(NOTE_LANGS.flatMap(([L, lname]) => NOTES.map(([k, label]) => [k + "_" + L, `${label}（${lname}）`, 36])));
+const XL_EDIT = new Set(XL_COLS.slice(4).map(c => c[0]));
+let XL_PLAN = null;
+function loadXLSX(){
+  if (window.XLSX) return Promise.resolve(window.XLSX);
+  return new Promise((res, rej) => {
+    const sc = document.createElement("script");
+    sc.src = "https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js";
+    sc.onload = () => window.XLSX ? res(window.XLSX) : rej(new Error("xlsx"));
+    sc.onerror = () => rej(new Error("xlsx"));
+    document.head.appendChild(sc);
+  });
+}
+const xlTargets = () => adminFiltered().filter(canEdit);
+function openXl(){
+  XL_PLAN = null;
+  const n = xlTargets().length;
+  const scope = [S.aStore !== "all" ? (S.stores.find(s => s.id === S.aStore) || {}).name : (isMaster() ? "全店舗" : ""), S.fCat !== "all" ? catOf(S.fCat).ja : ""].filter(Boolean).join("・");
+  $("#overlay").innerHTML = `<div class="scrim" data-close="1"></div><aside class="drawer" role="dialog" aria-modal="true" aria-labelledby="xlTitle">
+  <div class="d-head"><h2 id="xlTitle">Excelで商品説明をまとめて入力</h2><button type="button" class="btn ghost" data-close="1">閉じる</button></div>
+  <div class="d-body"><ol class="steps">
+    <li><b>① Excelをダウンロード</b><span class="hint">いま一覧に出ている商品${scope ? `（${esc(scope)}）` : ""}のうち、編集できる ${n} 件が入ったExcelができます。店舗や見出しで絞り込んでから押すと、その商品だけになります。</span>
+      <button type="button" class="btn primary" id="xlDown" ${n ? "" : "disabled"}>Excelをダウンロード</button><span class="msg" id="xlDMsg"></span></li>
+    <li><b>② ソムリエが入力</b><span class="hint">香り・味わい・合う料理などを書き込みます。空欄のところは今の内容のまま変わりません。消したいときは半角の「-」だけを入れてください。「管理番号」の列は変えないでください。</span></li>
+    <li><b>③ 入力したExcelを読み込む</b><span class="hint">保存する前に、変わる商品の一覧が出ます。</span>
+      <label class="btn" for="xlFile">入力したExcelを選ぶ</label><input type="file" id="xlFile" accept=".xlsx,.xls,.csv" hidden>
+      <span class="msg" id="xlMsg"></span><div id="xlPrev" hidden></div></li>
+  </ol></div>
+  <div class="d-foot"><span class="spacer"></span><span class="msg err" id="xlErr"></span><button type="button" class="btn" data-close="1">キャンセル</button><button type="button" class="btn primary" id="xlSave" disabled>この内容で保存する</button></div>
+  </aside>`;
+  $("#xlDown").addEventListener("click", xlDownload);
+  $("#xlFile").addEventListener("change", e => { if (e.target.files[0]) xlRead(e.target.files[0]); e.target.value = ""; });
+  $("#xlSave").addEventListener("click", xlSave);
+}
+async function xlDownload(){
+  const m = $("#xlDMsg"); m.className = "msg"; m.textContent = "作成中…";
+  try{
+    const X = await loadXLSX();
+    const rows = [XL_COLS.map(c => c[1])].concat(xlTargets().map(it => XL_COLS.map(([k]) =>
+      k === "cat" ? catOf(it.cat).ja : (k === "dry" || k === "body") ? (lvl(it[k]) || "") : (it[k] ?? ""))));
+    const ws = X.utils.aoa_to_sheet(rows);
+    ws["!cols"] = XL_COLS.map(c => ({wch: c[2]}));
+    const sample = (k, L) => ({desc_ja: "繊細な泡と熟成由来の深みが調和した、特別な日のための一本。", nose_ja: "白い花、熟した洋梨、トーストしたブリオッシュ", palate_ja: "きめ細かな泡、引き締まった酸、ナッツのような長い余韻", pair_ja: "生牡蠣、白身魚のカルパッチョ、天ぷら"})[k + "_" + L] || "";
+    const how = X.utils.aoa_to_sheet([
+      ["商品説明Excelの書き方"], [],
+      ["・1行が1つの商品です。「管理番号」の列は変えないでください（アプリが商品を見分けるのに使います）。"],
+      ["・商品名・見出し・ヴィンテージは確認用です。ここを変えてもアプリには反映されません。"],
+      ["・空欄のところは、アプリの今の内容のまま変わりません。消したいときは半角の「-」だけを入れてください。"],
+      ["・辛口・甘口とボディは、1〜5の数字で入れます（辛口・甘口：1辛口〜5甘口／ボディ：1軽やか〜5しっかり）。"],
+      ["・英語・中国語が空欄の項目は、お客様画面では英語（なければ日本語）で表示されます。"],
+      ["・新しい商品はこのExcelでは追加できません。先にアプリの「＋ 商品を追加」で登録してください。"],
+      [], ["記入例（シャンパーニュ）"],
+      ["担当ソムリエ", "山田"], ["辛口・甘口", 2], ["ボディ", 3],
+    ].concat(NOTES.map(([k, label]) => [label + "（日本語）", sample(k, "ja")])));
+    how["!cols"] = [{wch: 22}, {wch: 80}];
+    const wb = X.utils.book_new();
+    X.utils.book_append_sheet(wb, ws, "商品説明");
+    X.utils.book_append_sheet(wb, how, "書き方");
+    const d = new Date(), ymd = `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, "0")}${String(d.getDate()).padStart(2, "0")}`;
+    X.writeFile(wb, `wine-notes_${ymd}.xlsx`);
+    m.textContent = "ダウンロードしました（パソコンの「ダウンロード」フォルダに入ります）。";
+  }catch(e){ m.className = "msg err"; m.textContent = "Excelを作れませんでした。インターネット接続を確認して、もう一度押してください。"; }
+}
+async function xlRead(file){
+  const m = $("#xlMsg"), pv = $("#xlPrev"); m.className = "msg"; m.textContent = "読み込み中…"; pv.hidden = true; $("#xlSave").disabled = true; XL_PLAN = null;
+  try{
+    const X = await loadXLSX();
+    const wb = X.read(await file.arrayBuffer(), {type: "array"});
+    const ws = wb.Sheets["商品説明"] || wb.Sheets[wb.SheetNames[0]];
+    const rows = X.utils.sheet_to_json(ws, {header: 1, defval: "", raw: false});
+    const norm = h => String(h).normalize("NFKC").replace(/\s/g, "");
+    const byHead = Object.fromEntries(XL_COLS.map(([k, h]) => [norm(h), k]));
+    const hi = rows.findIndex(r => r.some(c => byHead[norm(c)] === "id"));
+    if (hi < 0) throw Object.assign(new Error("nohead"), {code: "nohead"});
+    const keys = rows[hi].map(c => byHead[norm(c)]);
+    const plan = [], skipped = [], bad = [];
+    rows.slice(hi + 1).forEach((r, ri) => {
+      const rec = {}; keys.forEach((k, i) => { if (k) rec[k] = String(r[i] ?? "").trim(); });
+      if (!rec.id) return;
+      const it = S.items.find(x => x.id === rec.id);
+      if (!it){ skipped.push(`${hi + ri + 2}行目：管理番号が見つかりません（${rec.name || rec.id}）`); return; }
+      if (!canEdit(it)){ skipped.push(`${it.name}：本部管理の商品なので変更できません`); return; }
+      const next = {...it}; let changed = [];
+      for (const k of XL_EDIT){
+        if (!(k in rec) || rec[k] === "") continue;
+        let val = rec[k] === "-" ? "" : rec[k];
+        if (k === "dry" || k === "body"){
+          if (val === ""){ val = null; }
+          else { val = lvl(val.normalize("NFKC")); if (!val){ bad.push(`${it.name}：「${XL_COLS.find(c => c[0] === k)[1]}」は1〜5の数字で入れてください`); continue; } }
+        }
+        if ((it[k] ?? (k === "dry" || k === "body" ? null : "")) !== val){ next[k] = val; changed.push(k); }
+      }
+      if (changed.length){ delete next.sample; plan.push({it: next, n: changed.length}); }
+    });
+    XL_PLAN = plan;
+    m.textContent = plan.length ? `${plan.length} 件の商品の説明が変わります。内容を確認して「この内容で保存する」を押してください。` : "変わる内容はありませんでした。";
+    pv.innerHTML = (plan.length ? `<div class="xl-list">${plan.map(p => `<div>${esc(p.it.name)} <span class="hint">（${p.n}項目）</span></div>`).join("")}</div>` : "")
+      + (bad.length || skipped.length ? `<p class="msg err">読み込まなかった箇所があります：</p><div class="xl-list">${bad.concat(skipped).map(x => `<div>${esc(x)}</div>`).join("")}</div>` : "");
+    pv.hidden = !pv.innerHTML; pv.style.cssText = "display:grid;gap:8px;width:100%";
+    $("#xlSave").disabled = !plan.length;
+  }catch(e){
+    m.className = "msg err";
+    m.textContent = e && e.code === "nohead" ? "このExcelには「管理番号」の列がありません。①でダウンロードしたExcelに入力してください。" : "Excelを読み込めませんでした。①でダウンロードしたExcelか確かめて、もう一度選んでください。";
+  }
+}
+async function xlSave(){
+  if (!XL_PLAN || !XL_PLAN.length) return;
+  const b = $("#xlSave"), err = $("#xlErr"); b.disabled = true; err.textContent = "";
+  const plan = XL_PLAN, failed = []; let done = 0;
+  const now = new Date().toISOString();
+  const work = plan.slice();
+  const worker = async () => { for (let p; (p = work.shift());){
+    p.it.updatedAt = now;
+    try{ if (S.live) await API.put("items", p.it); const i = S.items.findIndex(x => x.id === p.it.id); if (i >= 0) S.items[i] = p.it; }
+    catch(e){ failed.push(p.it.name); }
+    done++; b.textContent = `保存中… ${done} / ${plan.length}`;
+  } };
+  await Promise.all([worker(), worker(), worker()]);
+  renderAdmin();
+  if (failed.length){ b.textContent = "この内容で保存する"; b.disabled = false; XL_PLAN = plan.filter(p => failed.includes(p.it.name)); err.textContent = `${failed.length} 件を保存できませんでした。もう一度「この内容で保存する」を押してください。`; return; }
+  XL_PLAN = null; b.textContent = "保存しました";
+  $("#xlMsg").className = "msg"; $("#xlMsg").textContent = `${plan.length} 件の説明を保存しました。iPadには数分以内に反映されます。`; $("#xlPrev").hidden = true;
 }
 
 /* ----- headings (categories) manager ----- */
@@ -1055,6 +1232,11 @@ document.addEventListener("click", async e => {
   if (d.item) return openDetail(d.item);
   if (d.sheet) return openSheet(d.sheet);
   if (d.atab){ S.aTab = d.atab; renderAdmin(); return; }
+  if (d.eltab){
+    document.querySelectorAll("[data-eltab]").forEach(b => b.setAttribute("aria-pressed", b === el));
+    document.querySelectorAll("[data-lpane]").forEach(p => p.hidden = p.dataset.lpane !== d.eltab);
+    return;
+  }
   if (d.sedit) return openSheetEditor(d.sedit);
   if (d.cmove !== undefined){ const cur = readCats(), i = Number(d.cmove), j = i + Number(d.dir); if (j < 0 || j >= cur.length) return; [cur[i], cur[j]] = [cur[j], cur[i]]; setCatsDraft(cur); return; }
   if (d.cdel){
@@ -1109,6 +1291,7 @@ $("#btnAdd").addEventListener("click", () => {
   openEditor(null);
 });
 $("#btnStores").addEventListener("click", openStores);
+$("#btnXl").addEventListener("click", openXl);
 let ROW_PHOTO = null;
 async function setRowPhoto(id, file){
   const it = S.items.find(x => x.id === id); if (!it || !file || !file.type.startsWith("image/")) return;
