@@ -12,8 +12,11 @@ async function newSiteReady() {
   if (Date.now() - checkedAt < 60_000) return false;
   checkedAt = Date.now();
   try {
-    const r = await fetch(NEW_ORIGIN + "/api/version", { cf: { cacheTtl: 0 } });
-    newSiteUp = r.ok;
+    // Ready = database connected (/api/version OK) and admin password set
+    // (/api/admin/me without a key answers 401, not 500).
+    const v = await fetch(NEW_ORIGIN + "/api/version", { cf: { cacheTtl: 0 } });
+    const a = await fetch(NEW_ORIGIN + "/api/admin/me", { cf: { cacheTtl: 0 } });
+    newSiteUp = v.ok && a.status === 401;
   } catch {
     newSiteUp = false;
   }
