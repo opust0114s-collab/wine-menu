@@ -77,6 +77,10 @@ tr.off td:not(.keep){opacity:.45}
 .tag{display:inline-block;font-size:11px;padding:1px 8px;border-radius:999px;background:var(--chip);color:var(--muted)}
 .tag.sample{background:transparent;border:1px dashed var(--muted)}
 .price{text-align:right;white-space:nowrap}
+.mv{display:flex;flex-direction:column;gap:4px}
+.mv .btn{padding:2px 12px;font-size:15px;line-height:1.4;justify-content:center}
+.mv .btn:disabled{opacity:.25;cursor:default}
+.mv-hint{margin:0 0 10px;font-size:13px;color:var(--muted)}
 .switch{position:relative;width:42px;height:24px;border-radius:999px;border:0;background:var(--line);padding:0;transition:background .15s}
 .switch::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:var(--fg);transition:transform .15s;box-shadow:0 1px 2px rgba(0,0,0,.25)}
 .switch[aria-checked="true"]{background:var(--ok)}
@@ -385,12 +389,22 @@ function bottleSVG(cat){
 const photoHTML = (it, alt) => it.photo ? `<img src="${esc(it.photo)}" alt="${esc(alt || "")}" loading="lazy">` : bottleSVG(catOf(it.cat).style || it.cat);
 
 /* ---------------- data layer ---------------- */
+const priceOf = it => Number(it.price_bottle || it.price_glass || 0);
+const legacyCmp = (a, b) => priceOf(a) - priceOf(b) || String(a.name).localeCompare(String(b.name));
+const hasOrder = it => typeof it.order === "number" && isFinite(it.order);
+// same rule as the server: items without a manual order go to the end of their heading, cheapest first
+function fillOrder(items){
+  const max = {};
+  items.forEach(it => { if (hasOrder(it)) max[it.cat] = Math.max(max[it.cat] ?? 0, it.order); });
+  items.filter(it => !hasOrder(it)).sort(legacyCmp).forEach(it => { it.order = max[it.cat] = (max[it.cat] ?? 0) + 1; });
+  return items;
+}
 function sortItems(a, b){
   const ix = id => { const i = CATS.findIndex(c => c.id === id); return i < 0 ? 999 : i; };
   const ca = ix(a.cat), cb = ix(b.cat);
   if (ca !== cb) return ca - cb;
-  const pa = Number(a.price_bottle || a.price_glass || 0), pb = Number(b.price_bottle || b.price_glass || 0);
-  return pa - pb || String(a.name).localeCompare(String(b.name));
+  const oa = hasOrder(a) ? a.order : Infinity, ob = hasOrder(b) ? b.order : Infinity;
+  return (oa - ob) || legacyCmp(a, b);
 }
 async function saveItem(it){
   it.updatedAt = new Date().toISOString();
@@ -459,7 +473,7 @@ function applyData(d){
   S.stores = (d.stores || []).sort((a,b) => (a.order ?? 0) - (b.order ?? 0) || String(a.name).localeCompare(String(b.name)));
   if (d.cats && d.cats.length) setCats(d.cats.sort((a,b) => (a.order ?? 0) - (b.order ?? 0)));
   else setCats(DEFAULT_CATS.map((c, i) => ({...c, order: i})));
-  S.items = (d.items || []).sort(sortItems);
+  S.items = fillOrder(d.items || []).sort(sortItems);
   S.sheets = (d.sheets || []).sort((a,b) => (a.order ?? 0) - (b.order ?? 0));
   S.version = d.version;
   if (d.me){ S.role = d.me.role; S.myStore = d.me.storeId || null; if (S.role === "store") S.aStore = S.myStore; }
@@ -668,12 +682,13 @@ function renderAdmin(){
   if (!list.length){ $("#tableArea").innerHTML = `<div class="tablewrap"><div class="empty"><strong>${S.items.length ? "条件に合う商品がありません" : "まだ商品がありません"}</strong>「＋ 商品を追加」から写真・商品名・価格を登録してください。</div></div>`; return; }
   const sname = id => (S.stores.find(s => s.id === id) || {}).name;
   const noPh = list.filter(it => !it.photo).length;
-  $("#tableArea").innerHTML = (noPh ? `<div class="photo-cta"><b>写真の登録：</b>左端の「＋写真」を押すか、写真ファイルをそこへドラッグすると、その商品の写真が登録されます（${noPh}件が写真なし）。</div>` : "") + `<div class="tablewrap"><table><thead><tr><th></th><th>商品名</th><th>見出し</th><th>店舗</th><th class="price">グラス</th><th class="price">ボトル</th><th>提供</th><th></th></tr></thead><tbody>${
-    list.map(it => {
+  $("#tableArea").innerHTML = (noPh ? `<div class="photo-cta"><b>写真の登録：</b>左端の「＋写真」を押すか、写真ファイルをそこへドラッグすると、その商品の写真が登録されます（${noPh}件が写真なし）。</div>` : "") + `<p class="mv-hint">「↑」「↓」を押すと、同じ見出しの中で商品の順番を入れ替えられます。iPadのメニューにも同じ順番で表示されます。${isMaster() ? "複数店舗で共通の商品は、その商品を置いている全店舗で順番が変わります。" : "「本部管理」の商品は動かせませんが、自店の商品をその前後へ動かせます。"}</p><div class="tablewrap"><table><thead><tr><th>並び順</th><th></th><th>商品名</th><th>見出し</th><th>店舗</th><th class="price">グラス</th><th class="price">ボトル</th><th>提供</th><th></th></tr></thead><tbody>${
+    list.map((it, i) => {
       const on = it.active !== false;
+      const up = canEdit(it) && list[i - 1] && list[i - 1].cat === it.cat, down = canEdit(it) && list[i + 1] && list[i + 1].cat === it.cat;
       const miss = [!it.desc_en && "英", !it.desc_zh && "中"].filter(Boolean);
       const ok = canEdit(it);
-      return `<tr class="${on ? "" : "off"}"><td class="keep"><button type="button" class="thumb ${it.photo ? "" : "nophoto"}" ${ok ? "" : "disabled"} data-photo="${esc(it.id)}" title="${it.photo ? "写真を変更" : "写真を追加"}">${it.photo ? photoHTML(it, "") : '<span>＋<br>写真</span>'}</button></td>
+      return `<tr class="${on ? "" : "off"}"><td class="keep"><div class="mv"><button type="button" class="btn" data-imove="${esc(it.id)}" data-dir="-1" ${up ? "" : "disabled"} aria-label="上へ" title="1つ上へ">↑</button><button type="button" class="btn" data-imove="${esc(it.id)}" data-dir="1" ${down ? "" : "disabled"} aria-label="下へ" title="1つ下へ">↓</button></div></td><td class="keep"><button type="button" class="thumb ${it.photo ? "" : "nophoto"}" ${ok ? "" : "disabled"} data-photo="${esc(it.id)}" title="${it.photo ? "写真を変更" : "写真を追加"}">${it.photo ? photoHTML(it, "") : '<span>＋<br>写真</span>'}</button></td>
       <td><div class="iname">${esc(it.name)} ${it.sample ? '<span class="tag sample">サンプル</span>' : ""}${ok ? "" : ' <span class="tag" title="複数店舗で共通の商品は、本部（マスター）が管理します">本部管理</span>'}</div><div class="isub">${esc([it.name_ja, it.grape, it.vintage, it.region].filter(Boolean).join(" · "))}${miss.length ? ` <span class="tag">説明文 未翻訳: ${miss.join("・")}</span>` : ""}</div></td>
       <td><span class="tag">${esc(catOf(it.cat).ja)}</span></td>
       <td class="isub">${esc((it.stores||[]).map(sname).filter(Boolean).join("、") || "未設定")}</td>
@@ -743,6 +758,28 @@ function openSheetEditor(id){
     if (!del.classList.contains("armed")){ del.classList.add("armed"); del.textContent = "もう一度押すと削除"; return; }
     try{ await deleteSheet(E.id); closeOverlay(); }catch(e){ $("#shErr").textContent = "削除できませんでした（" + (e.code || "エラー") + "）。"; }
   });
+}
+// move an item one place up (-1) or down (+1) within its heading, as shown in the current list
+async function moveItem(id, dir){
+  const list = adminFiltered();
+  const i = list.findIndex(x => x.id === id), it = list[i], nb = list[i + dir];
+  if (!it || !nb || nb.cat !== it.cat || !canEdit(it)) return;
+  const far = list[i + 2 * dir];
+  const edge = far && far.cat === it.cat ? far.order : nb.order + dir;
+  const order = (nb.order + edge) / 2;
+  try{
+    if (order > Math.min(nb.order, edge) && order < Math.max(nb.order, edge)){
+      const next = {...it, order}; delete next.sample;
+      await saveItem(next);
+      return;
+    }
+    // no room left between the two neighbours: renumber the whole heading (master only)
+    if (!isMaster()){ banner("この位置へは移動できませんでした。本部（マスター）にご連絡ください。"); return; }
+    const all = S.items.filter(x => x.cat === it.cat && x.id !== it.id);
+    const k = all.findIndex(x => x.id === nb.id);
+    all.splice(dir < 0 ? k : k + 1, 0, it);
+    for (let n = 0; n < all.length; n++) if (all[n].order !== n + 1) await saveItem({...all[n], order: n + 1});
+  }catch(e){ banner("並び順を保存できませんでした（" + (e.code || "エラー") + "）。もう一度お試しください。"); }
 }
 async function moveSheet(id, dir){
   const list = S.sheets.filter(sh => S.aStore === "all" || (sh.stores || []).includes(S.aStore));
@@ -858,6 +895,9 @@ function wireEditor(){
     if (!ED.name){ $("#edErr").textContent = "商品名を入力してください。"; $("#eName").focus(); return; }
     if (!ED.price_bottle && !ED.price_glass){ $("#edErr").textContent = "グラスかボトルの価格を入力してください。"; $("#ePB").focus(); return; }
     delete ED.sample;
+    // a new item, or one moved to another heading, goes to the end of its heading
+    const prev = S.items.find(x => x.id === ED.id);
+    if (!prev || prev.cat !== ED.cat || !hasOrder(ED)) ED.order = Date.now();
     $("#btnSave").disabled = true; $("#edErr").textContent = "";
     try{ await saveItem(ED); closeOverlay(); }
     catch(e){ $("#btnSave").disabled = false; $("#edErr").textContent = "保存できませんでした（" + (e.code || "エラー") + "）。もう一度お試しください。"; }
@@ -1023,6 +1063,7 @@ document.addEventListener("click", async e => {
   }
   if (d.ctr) return translateCat(d.ctr, el);
   if (d.smove) return moveSheet(d.smove, Number(d.dir));
+  if (d.imove) return moveItem(d.imove, Number(d.dir));
   if (d.astore){ S.aStore = d.astore; renderAdmin(); return; }
   if (d.edit) return openEditor(d.edit);
   if (d.photo){ ROW_PHOTO = d.photo; $("#rowFile").value = ""; $("#rowFile").click(); return; }
