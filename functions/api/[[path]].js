@@ -39,14 +39,35 @@ async function version(db) {
   return r ? r.v : "0";
 }
 
+// Items carry a manual sort key `order` (smaller = earlier within its heading).
+// Items saved before that existed get one here, once: they go after any ordered items of
+// their heading, cheapest first (the order the menu used before), so nothing visibly moves.
+const priceOf = (d) => Number(d.price_bottle || d.price_glass || 0);
+const hasOrder = (d) => typeof d.order === "number" && Number.isFinite(d.order);
+async function fillOrder(db, items) {
+  const missing = items.filter((d) => !hasOrder(d));
+  if (!missing.length) return;
+  const max = {};
+  for (const d of items) if (hasOrder(d)) max[d.cat] = Math.max(max[d.cat] ?? 0, d.order);
+  missing.sort((a, b) => priceOf(a) - priceOf(b) || String(a.name).localeCompare(String(b.name)));
+  const stmts = missing.map((d) => {
+    d.order = max[d.cat] = (max[d.cat] ?? 0) + 1;
+    return db.prepare("UPDATE docs SET data = json_set(data, '$.order', ?) WHERE kind = 'items' AND id = ? AND json_extract(data, '$.order') IS NULL").bind(d.order, d.id);
+  });
+  for (let i = 0; i < stmts.length; i += 100) await db.batch(stmts.slice(i, i + 100));
+}
+
 async function loadAll(db, admin) {
   const { results } = await db.prepare("SELECT kind, id, data FROM docs").all();
   const out = { stores: [], items: [], cats: [], sheets: [] };
   for (const r of results) {
     if (!out[r.kind]) continue;
-    const d = { ...JSON.parse(r.data), id: r.id };
-    if (!admin && (r.kind === "items" || r.kind === "sheets") && d.active === false) continue;
-    out[r.kind].push(d);
+    out[r.kind].push({ ...JSON.parse(r.data), id: r.id });
+  }
+  await fillOrder(db, out.items);
+  if (!admin) {
+    out.items = out.items.filter((d) => d.active !== false);
+    out.sheets = out.sheets.filter((d) => d.active !== false);
   }
   out.version = await version(db);
   return out;
