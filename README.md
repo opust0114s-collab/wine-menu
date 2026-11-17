@@ -1,4 +1,4 @@
-# Wine Menu（店舗用メニュー）
+# SmappaGroup HOST MENU（店舗用メニュー）
 
 店舗のiPadでURLを開くだけで表示できる、ワイン・シャンパーニュ・ブランデー用のメニューです。日本語・英語・中国語に切り替えられます。本部のPCから、パスワード付きの管理画面で全店舗のメニューを更新します。
 
@@ -9,13 +9,13 @@
 
 | 用途 | URL |
 |---|---|
-| 管理画面（PC） | `https://<プロジェクト名>.pages.dev/#admin` |
-| 店舗ごとのお客様画面（iPad） | `https://<プロジェクト名>.pages.dev/#menu-<店舗ID>`（管理画面の「店舗の管理」に表示されます） |
+| 管理画面（PC） | `https://smappagroup-host-menu.pages.dev/#admin` |
+| 店舗ごとのお客様画面（iPad） | `https://smappagroup-host-menu.pages.dev/#menu-<店舗ID>`（管理画面の「店舗の管理」に表示されます） |
 
 ## Cloudflareでの初回設定（1回だけ）
 
 1. Cloudflareのダッシュボードで **Storage & Databases → D1 → Create database** を開き、名前を `wine-menu-db` にして作成します。
-2. **Workers & Pages → Create → Pages → Connect to Git** を開き、GitHubの `wine-menu` リポジトリを選びます。
+2. **Workers & Pages → Create → Pages → Connect to Git** を開き、GitHubの `wine-menu` リポジトリを選び、Project name を `smappagroup-host-menu` にします。
    - Framework preset：`None`
    - Build command：空欄
    - Build output directory：空欄（そのまま）
