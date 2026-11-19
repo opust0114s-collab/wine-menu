@@ -144,6 +144,17 @@ tr.off td:not(.keep){opacity:.45}
 .bg-row .sw.on{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent)}
 .bg-row .sw-custom{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);cursor:pointer}
 .bg-row .sw-custom input{width:32px;height:28px;padding:0;border:1px solid var(--line);border-radius:6px;background:none}
+.tc-drawer{width:min(960px,100%)}
+.tc-grid{display:grid;gap:16px}
+@media (min-width:820px){.tc-grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:start}.tc-prevwrap{position:sticky;top:0;order:2}}
+.tc-list{display:grid;gap:6px}
+.tc-row{display:flex;align-items:center;gap:10px}
+.tc-row input[type=color]{width:44px;height:32px;padding:0;border:1px solid var(--line);border-radius:6px;background:none;flex:none;cursor:pointer}
+.tc-name{flex:1;min-width:0;font-size:13px;display:grid}
+.tc-prev{background:var(--m-bg);color:var(--m-fg);padding:18px 14px;border:1px solid var(--line);position:relative}
+.tc-tabs{position:absolute;top:8px;right:8px}
+.tc-tabs .langs button{padding:4px 8px;min-width:0;font-size:11px}
+.btn.armed{background:var(--accent);color:var(--accent-fg)}
 .st-row input{flex:1;min-width:0;border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:7px 10px}
 .linkbox{display:flex;gap:6px;align-items:center;font-size:12px;color:var(--muted);word-break:break-all}
 
@@ -153,20 +164,20 @@ tr.off td:not(.keep){opacity:.45}
 .m-head{position:relative;padding-block:30px 8px;text-align:center}
 .m-head .langs{position:absolute;top:22px;right:max(28px,env(safe-area-inset-right,0px))}
 .langs{display:flex;align-items:center}
-.langs button{border:0;background:transparent;color:var(--m-muted);padding:8px 12px;font-family:var(--f-caps);font-size:12px;letter-spacing:.22em;min-width:48px;position:relative}
+.langs button{border:0;background:transparent;color:var(--c-tab,var(--m-muted));padding:8px 12px;font-family:var(--f-caps);font-size:12px;letter-spacing:.22em;min-width:48px;position:relative}
 .langs button+button::before{content:"";position:absolute;left:0;top:30%;bottom:30%;width:1px;background:var(--m-line)}
-.langs button[aria-pressed="true"]{color:var(--m-gold)}
-.langs button[aria-pressed="true"] span{border-bottom:1px solid var(--m-gold);padding-bottom:3px}
+.langs button[aria-pressed="true"]{color:var(--c-tabon,var(--m-gold))}
+.langs button[aria-pressed="true"] span{border-bottom:1px solid currentColor;padding-bottom:3px}
 .m-title{display:grid;justify-items:center;gap:2px;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;padding-top:26px}
-.script{font-family:var(--f-script);color:var(--m-gold);font-size:30px;line-height:1;letter-spacing:.01em}
+.script{font-family:var(--f-script);color:var(--c-script,var(--m-gold));font-size:30px;line-height:1;letter-spacing:.01em}
 .flank{display:flex;align-items:center;justify-content:center;gap:18px}
 .orn{width:44px;height:10px;flex:none;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 44 10'%3E%3Cg fill='none' stroke='%23c9a96b' stroke-width='.8'%3E%3Cpath d='M0 5h26M28 1l4 4-4 4M33 1l4 4-4 4M38 1l4 4-4 4'/%3E%3C/g%3E%3C/svg%3E") center/contain no-repeat}
 .orn.r{transform:scaleX(-1)}
-.m-title h1{font-family:var(--f-caps);font-weight:500;font-size:clamp(26px,3.6vw,40px);letter-spacing:.24em;margin:0;line-height:1.2;text-wrap:balance;padding-left:.24em}
+.m-title h1{color:var(--c-store,var(--m-fg));font-family:var(--f-caps);font-weight:500;font-size:clamp(26px,3.6vw,40px);letter-spacing:.24em;margin:0;line-height:1.2;text-wrap:balance;padding-left:.24em}
 .m-tabs{display:flex;justify-content:center;flex-wrap:wrap;gap:4px 8px;padding-block:26px 0;position:sticky;top:env(safe-area-inset-top,0px);background:var(--m-bg);z-index:5}
 .m-tabs::after{content:"";position:absolute;left:50%;bottom:0;width:min(720px,80%);transform:translateX(-50%);height:1px;background:linear-gradient(90deg,transparent,var(--m-line),transparent)}
-.m-tabs button{border:0;background:transparent;color:var(--m-muted);font-family:var(--f-caps);font-size:13px;letter-spacing:.2em;padding:10px 14px 14px;position:relative}
-.m-tabs button[aria-pressed="true"]{color:var(--m-fg)}
+.m-tabs button{border:0;background:transparent;color:var(--c-tab,var(--m-muted));font-family:var(--f-caps);font-size:13px;letter-spacing:.2em;padding:10px 14px 14px;position:relative}
+.m-tabs button[aria-pressed="true"]{color:var(--c-tabon,var(--m-fg))}
 .m-tabs button[aria-pressed="true"]::after{content:"";position:absolute;left:50%;bottom:6px;width:5px;height:5px;background:var(--m-gold);transform:translateX(-50%) rotate(45deg)}
 .m-tabs .n{display:none}
 .m-body{flex:1;padding-block:44px 56px;display:grid;gap:84px}
@@ -175,30 +186,30 @@ tr.off td:not(.keep){opacity:.45}
 .m-sec.has-feat.flip .m-list{order:2}
 .m-list{display:grid;gap:4px;width:100%;max-width:760px;margin:0 auto}
 .sec-head{text-align:center;margin-bottom:26px;display:grid;justify-items:center;gap:2px}
-.sec-head h2{font-family:var(--f-caps);font-weight:500;font-size:22px;letter-spacing:.28em;margin:0;color:var(--m-fg);padding-left:.28em}
-.sec-head .sub{font-size:11px;letter-spacing:.3em;color:var(--m-muted);text-transform:uppercase;margin-top:6px}
+.sec-head h2{font-family:var(--f-caps);font-weight:500;font-size:22px;letter-spacing:.28em;margin:0;color:var(--c-head,var(--m-fg));padding-left:.28em}
+.sec-head .sub{font-size:11px;letter-spacing:.3em;color:var(--c-subhead,var(--m-muted));text-transform:uppercase;margin-top:6px}
 .mi{display:grid;grid-template-columns:minmax(0,1fr);gap:14px;align-items:center;border:0;background:transparent;color:inherit;text-align:left;padding:14px 0;width:100%}
 .with-ph .mi{grid-template-columns:66px minmax(0,1fr);gap:20px}
 .mi-ph{width:66px;height:88px;background:var(--m-card);outline:1px solid var(--m-line);outline-offset:3px;overflow:hidden;display:grid;place-items:center}
 .mi-ph img{width:100%;height:100%;object-fit:cover;filter:brightness(.88) contrast(1.05)}
 .mi-ph svg{width:70%;height:70%}
 .mi-line{display:flex;align-items:baseline;gap:12px}
-.mi-name{font-family:var(--f-caps);font-size:15px;letter-spacing:.14em;line-height:1.4;color:var(--m-fg);min-width:0}
+.mi-name{font-family:var(--f-caps);font-size:15px;letter-spacing:.14em;line-height:1.4;color:var(--c-name,var(--m-fg));min-width:0}
 .lead{flex:1 1 30px;min-width:30px;height:3px;border-top:1px solid var(--m-line);border-bottom:1px solid var(--m-line);transform:translateY(-4px)}
-.mi-pr{flex:none;color:var(--m-gold);font-family:var(--f-display);font-size:20px;font-weight:500;font-variant-numeric:lining-nums tabular-nums;white-space:nowrap;display:flex;gap:14px;align-items:baseline}
-.mi-pr small{font-family:var(--f-caps);font-size:9px;letter-spacing:.2em;color:var(--m-muted);margin-right:6px}
-.mi-sub{display:block;margin-top:3px;font-family:var(--f-display);font-style:italic;font-size:16px;color:var(--m-muted);line-height:1.4}
-.lang-ja .mi-sub .loc{font-family:var(--f-serif-ja);font-style:normal;font-size:13px;color:var(--m-fg);opacity:.85;letter-spacing:.06em}
-.lang-zh .mi-sub .loc{font-family:var(--f-serif-zh);font-style:normal;font-size:13px;color:var(--m-fg);opacity:.85;letter-spacing:.06em}
+.mi-pr{flex:none;color:var(--c-price,var(--m-gold));font-family:var(--f-display);font-size:20px;font-weight:500;font-variant-numeric:lining-nums tabular-nums;white-space:nowrap;display:flex;gap:14px;align-items:baseline}
+.mi-pr small{font-family:var(--f-caps);font-size:9px;letter-spacing:.2em;color:var(--c-plabel,var(--m-muted));margin-right:6px}
+.mi-sub{display:block;margin-top:3px;font-family:var(--f-display);font-style:italic;font-size:16px;color:var(--c-grape,var(--m-muted));line-height:1.4}
+.lang-ja .mi-sub .loc{font-family:var(--f-serif-ja);font-style:normal;font-size:13px;color:var(--c-loc,var(--m-fg));opacity:.85;letter-spacing:.06em}
+.lang-zh .mi-sub .loc{font-family:var(--f-serif-zh);font-style:normal;font-size:13px;color:var(--c-loc,var(--m-fg));opacity:.85;letter-spacing:.06em}
 .mi-sub .dot{margin:0 8px;color:var(--m-line)}
-.mi:hover .mi-name,.mi:focus-visible .mi-name{color:var(--m-gold)}
+.mi:hover .mi-name,.mi:focus-visible .mi-name{color:var(--c-script,var(--m-gold))}
 .feat{position:relative;margin:0;padding:26px;max-width:440px;width:100%;justify-self:center}
 .feat::before{content:"";position:absolute;inset:0 0 auto auto;width:62%;height:62%;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Cg fill='none' stroke='%23c9a96b' stroke-width='.7' opacity='.7'%3E%3Cpath d='M0 20L20 0l20 20-20 20z'/%3E%3Cpath d='M10 20L20 10l10 10-10 10z'/%3E%3C/g%3E%3C/svg%3E") 0 0/40px 40px}
 .flip .feat::before{inset:auto auto 0 0}
 .feat .fimg{position:relative;aspect-ratio:4/5;max-width:100%;background:var(--m-card);overflow:hidden;box-shadow:0 30px 60px rgba(0,0,0,.55)}
 .feat .fimg img{width:100%;height:100%;object-fit:cover;filter:brightness(.82) contrast(1.08) saturate(.92)}
 .feat .fimg::after{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at center,transparent 55%,rgba(5,9,11,.55))}
-.feat figcaption{position:absolute;left:0;bottom:-2px;font-family:var(--f-script);font-size:34px;color:var(--m-gold);transform:translateY(40%);text-shadow:0 2px 12px rgba(0,0,0,.8)}
+.feat figcaption{position:absolute;left:0;bottom:-2px;font-family:var(--f-script);font-size:34px;color:var(--c-script,var(--m-gold));transform:translateY(40%);text-shadow:0 2px 12px rgba(0,0,0,.8)}
 .m-sec .sec-head{margin-bottom:34px}
 .tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:34px 26px;width:100%}
 .tile{display:grid;grid-template-columns:42% minmax(0,1fr);align-items:center;border:0;background:transparent;color:inherit;text-align:left;padding:0;min-width:0}
@@ -207,23 +218,23 @@ tr.off td:not(.keep){opacity:.45}
 .t-ph.none{background:transparent;box-shadow:none}
 .t-ph.none svg{width:70%;height:auto}
 .t-panel{margin-left:-14px;align-self:stretch;margin-block:14%;padding:16px 14px 14px 26px;display:flex;flex-direction:column;gap:4px;min-width:0;border:1px solid var(--m-line);background-color:var(--m-panel);background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='8' viewBox='0 0 16 8'%3E%3Cpath d='M0 6l4-4 4 4 4-4 4 4' fill='none' stroke='%23c9a96b' stroke-width='.6' opacity='.16'/%3E%3C/svg%3E")}
-.t-name{font-family:var(--f-display);font-weight:600;font-size:clamp(17px,1.9vw,23px);line-height:1.15;color:var(--m-fg);text-wrap:balance;overflow-wrap:anywhere}
-.t-loc{font-size:12px;letter-spacing:.06em;color:var(--m-fg);opacity:.8;line-height:1.4}
+.t-name{font-family:var(--f-display);font-weight:600;font-size:clamp(17px,1.9vw,23px);line-height:1.15;color:var(--c-name,var(--m-fg));text-wrap:balance;overflow-wrap:anywhere}
+.t-loc{font-size:12px;letter-spacing:.06em;color:var(--c-loc,var(--m-fg));opacity:.8;line-height:1.4}
 .lang-ja .t-loc{font-family:var(--f-serif-ja)}
 .lang-zh .t-loc{font-family:var(--f-serif-zh)}
-.t-sub{font-family:var(--f-display);font-style:italic;font-size:15px;color:var(--m-gold);line-height:1.3}
-.t-reg{font-size:11px;letter-spacing:.08em;color:var(--m-muted);line-height:1.4}
-.t-pr{margin-top:auto;padding-top:10px;display:grid;gap:2px;color:var(--m-gold);font-family:var(--f-display);font-size:clamp(17px,1.8vw,21px);font-weight:500;font-variant-numeric:lining-nums tabular-nums;border-top:1px solid var(--m-line)}
+.t-sub{font-family:var(--f-display);font-style:italic;font-size:15px;color:var(--c-grape,var(--m-gold));line-height:1.3}
+.t-reg{font-size:11px;letter-spacing:.08em;color:var(--c-region,var(--m-muted));line-height:1.4}
+.t-pr{margin-top:auto;padding-top:10px;display:grid;gap:2px;color:var(--c-price,var(--m-gold));font-family:var(--f-display);font-size:clamp(17px,1.8vw,21px);font-weight:500;font-variant-numeric:lining-nums tabular-nums;border-top:1px solid var(--m-line)}
 .t-pr span{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
-.t-pr small{font-family:var(--f-caps);font-size:9px;letter-spacing:.18em;color:var(--m-muted)}
-.tile:hover .t-name,.tile:focus-visible .t-name{color:var(--m-gold)}
+.t-pr small{font-family:var(--f-caps);font-size:9px;letter-spacing:.18em;color:var(--c-plabel,var(--m-muted))}
+.tile:hover .t-name,.tile:focus-visible .t-name{color:var(--c-script,var(--m-gold))}
 @media (max-width:860px){.tiles{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media (max-width:480px){.tiles{grid-template-columns:minmax(0,1fr)}.tile{grid-template-columns:36% minmax(0,1fr)}}
-.m-foot{padding-block:22px 26px;text-align:center;font-family:var(--f-caps);font-size:10px;letter-spacing:.24em;color:var(--m-muted);display:grid;gap:8px;justify-items:center}
+.m-foot{padding-block:22px 26px;text-align:center;font-family:var(--f-caps);font-size:10px;letter-spacing:.24em;color:var(--c-foot,var(--m-muted));display:grid;gap:8px;justify-items:center}
 .m-foot .hr{width:min(420px,70%);height:1px;background:linear-gradient(90deg,transparent,var(--m-line),transparent);margin-bottom:6px}
 .m-foot #mHint{font-family:var(--f-body);letter-spacing:.08em;opacity:.6}
-.m-empty{padding:80px 20px;text-align:center;color:var(--m-muted);display:grid;justify-items:center;gap:10px}
-.m-empty strong{font-family:var(--f-caps);font-weight:500;letter-spacing:.2em;font-size:20px;color:var(--m-fg)}
+.m-empty{padding:80px 20px;text-align:center;color:var(--c-foot,var(--m-muted));display:grid;justify-items:center;gap:10px}
+.m-empty strong{font-family:var(--f-caps);font-weight:500;letter-spacing:.2em;font-size:20px;color:var(--c-head,var(--m-fg))}
 .hold-ring{position:fixed;inset:0;pointer-events:none;z-index:60;display:grid;place-items:center}
 
 /* detail */
@@ -233,22 +244,22 @@ tr.off td:not(.keep){opacity:.45}
 .d-card .ph img{width:100%;height:100%;object-fit:cover;filter:brightness(.86) contrast(1.06)}
 .d-card .ph svg{width:46%;height:auto;opacity:.85}
 .d-info{padding:46px 44px;display:flex;flex-direction:column;gap:14px}
-.d-info .cat{font-family:var(--f-script);font-size:30px;color:var(--m-gold);line-height:1}
-.d-info h3{font-family:var(--f-caps);font-weight:500;font-size:28px;letter-spacing:.14em;line-height:1.3;margin:0;text-wrap:balance}
-.d-loc{font-size:16px;letter-spacing:.06em}
+.d-info .cat{font-family:var(--f-script);font-size:30px;color:var(--c-script,var(--m-gold));line-height:1}
+.d-info h3{color:var(--c-name,var(--m-fg));font-family:var(--f-caps);font-weight:500;font-size:28px;letter-spacing:.14em;line-height:1.3;margin:0;text-wrap:balance}
+.d-loc{font-size:16px;letter-spacing:.06em;color:var(--c-loc,var(--m-fg))}
 .lang-ja .d-loc{font-family:var(--f-serif-ja)}
 .lang-zh .d-loc{font-family:var(--f-serif-zh)}
-.d-meta{color:var(--m-muted);font-family:var(--f-display);font-style:italic;font-size:17px}
+.d-meta{color:var(--c-grape,var(--m-muted));font-family:var(--f-display);font-style:italic;font-size:17px}
 .d-rule{width:56px;height:1px;background:var(--m-gold);opacity:.7}
-.d-desc{font-size:15px;line-height:1.95;color:var(--m-fg);opacity:.86;white-space:pre-wrap}
+.d-desc{font-size:15px;line-height:1.95;color:var(--c-desc,var(--m-fg));opacity:.86;white-space:pre-wrap}
 .lang-en .d-desc{font-family:var(--f-display);font-size:18px;line-height:1.7}
 .lang-zh .d-desc{font-family:var(--f-serif-zh)}
 .lang-ja .d-desc{font-family:var(--f-serif-ja)}
 .d-prices{display:flex;gap:40px;border-top:1px solid var(--m-line);padding-top:18px;margin-top:auto}
 .d-prices div{display:grid;gap:2px}
-.d-prices small{font-family:var(--f-caps);font-size:10px;color:var(--m-muted);letter-spacing:.24em}
-.d-prices b{font-family:var(--f-display);font-size:30px;color:var(--m-gold);font-weight:500;font-variant-numeric:lining-nums tabular-nums}
-.d-close{position:absolute;top:22px;right:22px;border:1px solid var(--m-line);background:rgba(11,17,20,.6);color:var(--m-fg);padding:8px 18px;font-family:var(--f-caps);font-size:11px;letter-spacing:.22em;z-index:2}
+.d-prices small{font-family:var(--f-caps);font-size:10px;color:var(--c-plabel,var(--m-muted));letter-spacing:.24em}
+.d-prices b{font-family:var(--f-display);font-size:30px;color:var(--c-price,var(--m-gold));font-weight:500;font-variant-numeric:lining-nums tabular-nums}
+.d-close{position:absolute;top:22px;right:22px;border:1px solid var(--m-line);background:rgba(11,17,20,.6);color:var(--c-tabon,var(--m-fg));padding:8px 18px;font-family:var(--f-caps);font-size:11px;letter-spacing:.22em;z-index:2}
 .m-book{display:grid;gap:40px;justify-items:center}
 .m-book button{border:0;padding:12px;background:transparent;max-width:min(980px,100%);outline:1px solid var(--m-line)}
 .m-book img{display:block;width:100%;height:auto;box-shadow:0 24px 60px rgba(0,0,0,.6)}
@@ -563,6 +574,36 @@ function applyBg(st){
   }
   const tc = document.querySelector('meta[name="theme-color"]'); if (tc) tc.content = base;
 }
+function bgVars(st){
+  const base = st && okHex(st.bg) ? st.bg.toLowerCase() : DEFAULT_BG;
+  return {"--m-bg": base, "--m-bg2": rgb(mixHex(base, "#ffffff", .025)), "--m-card": rgb(mixHex(base, "#ffffff", .015)),
+    "--m-panel": rgb(mixHex(base, "#ffffff", .025), .92), "--m-ph1": rgb(mixHex(base, "#ffffff", .045))};
+}
+/* ----- text colours (per store, set by master). Unset = the standard black & gold look ----- */
+const TEXT_SLOTS = [
+  {k:"store",   name:"店名（いちばん上の大きな文字）", def:"#ece4d4"},
+  {k:"script",  name:"筆記体の飾り文字（Menu・Line up など）", def:"#c9a96b"},
+  {k:"tab",     name:"見出しの切り替えボタン・言語ボタン", def:"#8b938d"},
+  {k:"tabon",   name:"選んでいるボタン・「閉じる」ボタン", def:"#ece4d4"},
+  {k:"head",    name:"見出し（シャンパーニュ など）", def:"#ece4d4"},
+  {k:"subhead", name:"見出しの下の小さな文字", def:"#8b938d"},
+  {k:"name",    name:"商品名", def:"#ece4d4"},
+  {k:"loc",     name:"商品名の日本語・中国語表記", def:"#ece4d4"},
+  {k:"grape",   name:"ブドウ品種・ヴィンテージ", def:"#c9a96b"},
+  {k:"region",  name:"産地", def:"#8b938d"},
+  {k:"price",   name:"価格", def:"#c9a96b"},
+  {k:"plabel",  name:"価格の横の「グラス」「ボトル」", def:"#8b938d"},
+  {k:"desc",    name:"説明文（商品を押した時の画面）", def:"#ece4d4"},
+  {k:"foot",    name:"画面下の案内文", def:"#8b938d"},
+];
+function textVars(st){
+  const tc = (st && st.text) || {}, out = {};
+  TEXT_SLOTS.forEach(x => { out["--c-" + x.k] = okHex(tc[x.k]) ? tc[x.k].toLowerCase() : ""; });
+  return out;
+}
+function setVars(el, vars){
+  for (const [k, v] of Object.entries(vars)){ if (v) el.style.setProperty(k, v); else el.style.removeProperty(k); }
+}
 
 function renderMenu(){
   const L = S.lang, t = T[L];
@@ -572,6 +613,7 @@ function renderMenu(){
   const st = currentStore();
   $("#mEyebrow").textContent = "Menu";
   applyBg(st);
+  setVars(document.documentElement, textVars(st));
   $("#mStore").textContent = st ? st.name : (S.loaded ? "Wine List" : " ");
   $("#mTax").textContent = "";
   $("#mHint").textContent = t.hint;
@@ -1027,7 +1069,8 @@ async function openStores(){
       <div class="linkbox"><button type="button" class="btn" data-stopen="${esc(s.id)}">この店舗のお客様画面</button><span>${esc(base)}#menu-${esc(s.id)}</span></div>
       <div class="st-row"><input type="text" autocomplete="off" data-stpw="${esc(s.id)}" placeholder="${KEYS.has(s.id) ? "設定済み（変更する場合は新しいパスワードを入力）" : "店舗責任者用のパスワード（6文字以上）"}" aria-label="店舗責任者用のパスワード"><button type="button" class="btn" data-stpwset="${esc(s.id)}">${KEYS.has(s.id) ? "変更" : "発行"}</button>${KEYS.has(s.id) ? `<button type="button" class="btn danger" data-stpwdel="${esc(s.id)}">無効化</button>` : ""}</div>
       <span class="hint">${KEYS.has(s.id) ? "店舗責任者用パスワード：設定済み。責任者はこのパスワードでこの店舗だけを編集できます。" : "店舗責任者用パスワード：未設定"}</span>
-      <div class="bg-row"><span class="hint">お客様画面の背景色</span>${BG_PRESETS.map(p => `<button type="button" class="sw${(okHex(s.bg) ? s.bg.toLowerCase() : DEFAULT_BG) === p.hex ? " on" : ""}" style="background:${p.hex}" data-stbg="${esc(s.id)}" data-hex="${p.hex}" title="${p.name}" aria-label="${p.name}"></button>`).join("")}<label class="sw-custom" title="自由に色を選ぶ"><input type="color" value="${okHex(s.bg) ? s.bg : DEFAULT_BG}" data-stbgc="${esc(s.id)}" aria-label="背景色を自由に選ぶ">自由に選ぶ</label></div></div>`).join("") || '<span class="hint">まだ店舗がありません。</span>'}</div>
+      <div class="bg-row"><span class="hint">お客様画面の背景色</span>${BG_PRESETS.map(p => `<button type="button" class="sw${(okHex(s.bg) ? s.bg.toLowerCase() : DEFAULT_BG) === p.hex ? " on" : ""}" style="background:${p.hex}" data-stbg="${esc(s.id)}" data-hex="${p.hex}" title="${p.name}" aria-label="${p.name}"></button>`).join("")}<label class="sw-custom" title="自由に色を選ぶ"><input type="color" value="${okHex(s.bg) ? s.bg : DEFAULT_BG}" data-stbgc="${esc(s.id)}" aria-label="背景色を自由に選ぶ">自由に選ぶ</label></div>
+      <div class="bg-row"><span class="hint">お客様画面の文字色</span><button type="button" class="btn" data-sttext="${esc(s.id)}">文字の色を変える</button><span class="hint">${s.text && Object.keys(s.text).length ? "変更あり" : "標準の色"}</span></div></div>`).join("") || '<span class="hint">まだ店舗がありません。</span>'}</div>
     <div class="field"><label for="stNew">新しい店舗</label><div class="st-row"><input id="stNew" placeholder="例: 銀座店"><button type="button" class="btn primary" id="stAdd">追加</button></div></div>
     <span class="msg err" id="stErr"></span>
   </div></aside>`;
@@ -1039,6 +1082,82 @@ async function openStores(){
   $("#stAdd").addEventListener("click", add);
   $("#stNew").addEventListener("keydown", e => { if (e.key === "Enter") add(); });
 }
+
+/* ----- text colour editor ----- */
+let TC = null; // {id, draft:{slot:hex}}
+function openTextColors(id){
+  const st = S.stores.find(s => s.id === id); if (!st) return;
+  TC = {id, draft: {...(st.text || {})}};
+  const cur = k => okHex(TC.draft[k]) ? TC.draft[k].toLowerCase() : null;
+  $("#overlay").innerHTML = `<div class="scrim" data-close="1"></div><aside class="drawer tc-drawer" role="dialog" aria-modal="true" aria-labelledby="tcTitle">
+  <div class="d-head"><h2 id="tcTitle">文字の色：${esc(st.name)}</h2><button type="button" class="btn ghost" data-tcback="1">店舗の管理に戻る</button></div>
+  <div class="d-body">
+    <p class="hint" style="margin:0">色の四角を押すと色を選べます。見本で確かめてから、いちばん下の「保存する」を押してください。保存するとこの店舗のiPadに反映されます。</p>
+    <div class="tc-grid"><div class="tc-prevwrap"><div class="tc-prev lang-ja" id="tcPrev"></div></div>
+    <div class="tc-list">${TEXT_SLOTS.map(x => `<div class="tc-row"><input type="color" value="${cur(x.k) || x.def}" data-tck="${x.k}" aria-label="${esc(x.name)}"><span class="tc-name">${esc(x.name)}<span class="hint" data-tcst="${x.k}">${cur(x.k) ? "変更あり" : "標準の色"}</span></span><button type="button" class="btn" data-tcreset="${x.k}">標準に戻す</button></div>`).join("")}</div></div>
+    <div class="field" style="gap:8px;border-top:1px solid var(--line);padding-top:14px">
+      <div class="st-row"><button type="button" class="btn" id="tcAllReset">すべて標準の色に戻す</button></div>
+      ${S.stores.length > 1 ? `<div class="st-row"><button type="button" class="btn" id="tcCopy">この文字色を全店舗に使う</button></div><span class="hint">「この文字色を全店舗に使う」は、ほかの店舗の文字色も今の見本と同じ色にして保存します。</span>` : ""}
+    </div>
+    <span class="msg err" id="tcErr"></span>
+  </div>
+  <div class="d-foot"><span class="spacer"></span><button type="button" class="btn ghost" data-tcback="1">保存しないで戻る</button><button type="button" class="btn primary" id="tcSave">保存する</button></div></aside>`;
+  tcPreview();
+}
+function tcPreview(){
+  const st = S.stores.find(s => s.id === TC.id), el = $("#tcPrev"); if (!st || !el) return;
+  const fake = {...st, text: TC.draft};
+  setVars(el, {...bgVars(st), ...textVars(fake)});
+  const t = T.ja;
+  el.innerHTML = `<div class="m-title" style="padding-top:0"><div class="script">Menu</div><div class="flank"><span class="orn"></span><h1 style="font-size:24px">${esc(st.name)}</h1><span class="orn r"></span></div></div>
+    <div class="tc-tabs"><span class="langs"><button type="button" tabindex="-1" aria-pressed="true"><span>日本語</span></button><button type="button" tabindex="-1">EN</button></span></div>
+    <nav class="m-tabs" style="position:static;padding-top:8px"><button type="button" tabindex="-1" aria-pressed="true">すべて</button><button type="button" tabindex="-1">シャンパーニュ</button></nav>
+    <div class="sec-head" style="margin:18px 0 14px"><div class="script">Line up</div><div class="flank"><span class="orn"></span><h2>シャンパーニュ</h2><span class="orn r"></span></div><div class="sub">Champagne</div></div>
+    <div class="tile" style="max-width:320px;margin:0 auto"><span class="t-ph none">${photoHTML({cat:"champagne"}, "")}</span><span class="t-panel">
+      <span class="t-name">Dom Pérignon</span><span class="t-loc">ドン ペリニヨン</span><span class="t-sub">Chardonnay · 2013</span><span class="t-reg">Champagne, France</span>
+      <span class="t-pr"><span><small>${t.glass}</small>¥4,500</span><span><small>${t.bottle}</small>¥48,000</span></span></span></div>
+    <p class="d-desc" style="margin:18px 0 0;font-size:13px;line-height:1.8">（説明文の見本）熟した洋梨やブリオッシュの香り。きめ細かな泡と長い余韻が続きます。</p>
+    <div class="m-foot" style="padding:12px 0 0"><span>店名を長押しすると管理画面に戻ります</span></div>`;
+  document.querySelectorAll("[data-tcst]").forEach(h => { h.textContent = okHex(TC.draft[h.dataset.tcst]) ? "変更あり" : "標準の色"; });
+}
+async function saveTextColors(ids){
+  const text = {};
+  TEXT_SLOTS.forEach(x => { if (okHex(TC.draft[x.k])) text[x.k] = TC.draft[x.k].toLowerCase(); });
+  for (const id of ids){
+    const st = S.stores.find(s => s.id === id); if (!st) continue;
+    const next = {...st, text}; if (!Object.keys(text).length) delete next.text;
+    await saveStore(next);
+  }
+}
+document.addEventListener("input", e => {
+  const k = e.target.dataset && e.target.dataset.tck; if (!k || !TC) return;
+  const slot = TEXT_SLOTS.find(x => x.k === k);
+  if (e.target.value.toLowerCase() === slot.def) delete TC.draft[k]; else TC.draft[k] = e.target.value.toLowerCase();
+  tcPreview();
+});
+document.addEventListener("click", async e => {
+  const el = e.target.closest("button"); if (!el || !TC || !$("#tcPrev")) return;
+  const d = el.dataset;
+  if (d.tcreset){
+    delete TC.draft[d.tcreset];
+    const inp = document.querySelector(`[data-tck="${d.tcreset}"]`); if (inp) inp.value = TEXT_SLOTS.find(x => x.k === d.tcreset).def;
+    tcPreview(); return;
+  }
+  if (el.id === "tcAllReset"){
+    TC.draft = {};
+    TEXT_SLOTS.forEach(x => { const inp = document.querySelector(`[data-tck="${x.k}"]`); if (inp) inp.value = x.def; });
+    tcPreview(); return;
+  }
+  if (d.tcback){ TC = null; openStores(); return; }
+  if (el.id === "tcSave" || el.id === "tcCopy"){
+    if (el.id === "tcCopy" && !el.classList.contains("armed")){ el.classList.add("armed"); el.textContent = "もう一度押すと全店舗に保存"; return; }
+    el.disabled = true;
+    try{
+      await saveTextColors(el.id === "tcCopy" ? S.stores.map(s => s.id) : [TC.id]);
+      TC = null; openStores();
+    }catch(err){ el.disabled = false; $("#tcErr").textContent = "保存できませんでした（" + (err.code || "エラー") + "）。もう一度「保存する」を押してください。"; }
+  }
+});
 
 /* ---------------- events ---------------- */
 document.addEventListener("change", async e => {
@@ -1075,6 +1194,7 @@ document.addEventListener("click", async e => {
     try{ await saveItem(next); }catch(err){ banner("切り替えを保存できませんでした（" + (err.code || "エラー") + "）。"); }
     return;
   }
+  if (d.sttext) return openTextColors(d.sttext);
   if (d.stbg){
     const st = S.stores.find(s => s.id === d.stbg); if (!st) return;
     try{ await saveStore({...st, bg: d.hex}); openStores(); }catch(err){ $("#stErr").textContent = "背景色を保存できませんでした。"; }
