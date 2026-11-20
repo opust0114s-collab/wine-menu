@@ -3,14 +3,16 @@
 // Admin (header x-admin-key = master password ADMIN_PASSWORD, or a store manager's password):
 //   GET /api/admin/me                       -> {role: "master"|"store", storeId?}
 //   GET /api/admin/all
-//   PUT|DELETE /api/admin/doc/:kind/:id   (kind: stores | items | cats | sheets)
+//   PUT|DELETE /api/admin/doc/:kind/:id   (kind: stores | items | cats | sheets | lines)
 //   POST /api/admin/image  (raw image body)  -> {id, url}
 //   DELETE /api/admin/image/:id
 //   GET /api/admin/usage
 //   Master only: GET /api/admin/storekeys, PUT|DELETE /api/admin/storekey/:storeId  {password}
-// Store managers may only change items / sheets that belong to their own store alone.
+// Store managers may only change items / sheets / lines that belong to their own store alone.
+// `lines` are text-only menu entries (no photo): name, price, optional description.
 
-const KINDS = new Set(["stores", "items", "cats", "sheets"]);
+const KINDS = new Set(["stores", "items", "cats", "sheets", "lines"]);
+const STORE_KINDS = new Set(["items", "sheets", "lines"]); // kinds a store manager may edit
 const MAX_IMAGE = 1_500_000; // D1 rows are capped at 2MB; the browser compresses photos well below this
 let ready = false;
 
@@ -59,7 +61,7 @@ async function fillOrder(db, items) {
 
 async function loadAll(db, admin) {
   const { results } = await db.prepare("SELECT kind, id, data FROM docs").all();
-  const out = { stores: [], items: [], cats: [], sheets: [] };
+  const out = { stores: [], items: [], cats: [], sheets: [], lines: [] };
   for (const r of results) {
     if (!out[r.kind]) continue;
     out[r.kind].push({ ...JSON.parse(r.data), id: r.id });
@@ -68,6 +70,7 @@ async function loadAll(db, admin) {
   if (!admin) {
     out.items = out.items.filter((d) => d.active !== false);
     out.sheets = out.sheets.filter((d) => d.active !== false);
+    out.lines = out.lines.filter((d) => d.active !== false);
   }
   out.version = await version(db);
   return out;
@@ -144,6 +147,7 @@ export async function onRequest(ctx) {
           all.stores = all.stores.filter((s) => s.id === who.storeId);
           all.items = all.items.filter((d) => (d.stores || []).includes(who.storeId));
           all.sheets = all.sheets.filter((d) => (d.stores || []).includes(who.storeId));
+          all.lines = all.lines.filter((d) => (d.stores || []).includes(who.storeId));
         }
         all.me = who;
         return json(all);
@@ -178,8 +182,8 @@ export async function onRequest(ctx) {
       if (parts[1] === "doc" && KINDS.has(parts[2]) && parts[3]) {
         const kind = parts[2], id = decodeURIComponent(parts[3]);
         if (!master) {
-          // store managers: only items / image menus that belong to their own store alone
-          if (kind !== "items" && kind !== "sheets") return json({ error: "forbidden" }, 403);
+          // store managers: only items / image menus / text-only lines that belong to their own store alone
+          if (!STORE_KINDS.has(kind)) return json({ error: "forbidden" }, 403);
           const existing = await getDoc(db, kind, id);
           if (existing && !onlyMine(existing, who.storeId)) return json({ error: "forbidden" }, 403);
         }

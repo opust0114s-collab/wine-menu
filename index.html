@@ -230,6 +230,20 @@ tr.off td:not(.keep){opacity:.45}
 .tile:hover .t-name,.tile:focus-visible .t-name{color:var(--c-script,var(--m-gold))}
 @media (max-width:860px){.tiles{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media (max-width:480px){.tiles{grid-template-columns:minmax(0,1fr)}.tile{grid-template-columns:36% minmax(0,1fr)}}
+/* text-only list page (no photos): name ...... price, with an optional line of description */
+.m-sec.tl-sec{gap:6px}
+.tl{display:grid;gap:2px;width:100%;max-width:820px;margin:0 auto}
+.tl-row{padding:14px 0;border-bottom:1px solid rgba(201,169,107,.10)}
+.tl-row:last-child{border-bottom:0}
+.tl-row .mi-name{font-size:16px}
+.lang-ja .tl-row .mi-name{font-family:var(--f-serif-ja);letter-spacing:.08em}
+.lang-zh .tl-row .mi-name{font-family:var(--f-serif-zh);letter-spacing:.08em}
+.tl-alt{display:block;margin-top:2px;font-family:var(--f-display);font-style:italic;font-size:15px;color:var(--c-grape,var(--m-muted));line-height:1.4}
+.lang-en .tl-alt{font-family:var(--f-serif-ja);font-style:normal;font-size:13px;letter-spacing:.06em}
+.tl-desc{margin-top:6px;font-size:13px;line-height:1.8;color:var(--c-desc,var(--m-fg));opacity:.75;white-space:pre-wrap;max-width:640px}
+.lang-en .tl-desc{font-family:var(--f-display);font-size:16px;line-height:1.6}
+.lang-ja .tl-desc{font-family:var(--f-serif-ja)}
+.lang-zh .tl-desc{font-family:var(--f-serif-zh)}
 .m-foot{padding-block:22px 26px;text-align:center;font-family:var(--f-caps);font-size:10px;letter-spacing:.24em;color:var(--c-foot,var(--m-muted));display:grid;gap:8px;justify-items:center}
 .m-foot .hr{width:min(420px,70%);height:1px;background:linear-gradient(90deg,transparent,var(--m-line),transparent);margin-bottom:6px}
 .m-foot #mHint{font-family:var(--f-body);letter-spacing:.08em;opacity:.6}
@@ -315,6 +329,7 @@ tr.off td:not(.keep){opacity:.45}
   <nav class="a-tabs" aria-label="登録の種類">
     <button type="button" data-atab="items">商品（写真・商品名・価格）</button>
     <button type="button" data-atab="sheets">画像メニュー（デザイナー制作のJPEG）</button>
+    <button type="button" data-atab="lines">文字だけのメニュー（写真なし）</button>
     <button type="button" data-atab="tour">ツアー（デザイナー制作の画像）</button>
   </nav>
   <nav class="storebar" id="storebar" aria-label="店舗"></nav>
@@ -368,9 +383,9 @@ let CAT = Object.fromEntries(CATS.map(c => [c.id, c]));
 function setCats(list){ CATS = list; CAT = Object.fromEntries(CATS.map(c => [c.id, c])); }
 const catOf = id => CAT[id] || {id, ja:"その他", en:"Others", zh:"其他", style:"other"};
 const T = {
-  ja:{book:"メニューブック", tour:"ツアー", list:"ドリンクリスト", all:"すべて", bottle:"ボトル", glass:"グラス", tax:"表示価格は税込です。", close:"閉じる", empty:"ただいまメニューを準備中です", emptySub:"スタッフにお声がけください。", vintage:"ヴィンテージ", hint:"店名を長押しすると管理画面に戻ります"},
-  en:{book:"Menu Book", tour:"Tour", list:"Wine & Spirits", all:"All", bottle:"Bottle", glass:"Glass", tax:"All prices include tax.", close:"Close", empty:"Our list is being updated", emptySub:"Please ask our staff for today's selection.", vintage:"Vintage", hint:"Press and hold the store name for staff mode"},
-  zh:{book:"菜单册", tour:"游览", list:"酒单", all:"全部", bottle:"整瓶", glass:"单杯", tax:"价格均已含税。", close:"关闭", empty:"酒单更新中", emptySub:"请向服务人员咨询。", vintage:"年份", hint:"长按店名进入管理画面"},
+  ja:{book:"メニューブック", tour:"ツアー", list:"ドリンクリスト", lines:"メニュー一覧", price:"価格", all:"すべて", bottle:"ボトル", glass:"グラス", tax:"表示価格は税込です。", close:"閉じる", empty:"ただいまメニューを準備中です", emptySub:"スタッフにお声がけください。", vintage:"ヴィンテージ", hint:"店名を長押しすると管理画面に戻ります"},
+  en:{book:"Menu Book", tour:"Tour", list:"Wine & Spirits", lines:"Menu List", price:"Price", all:"All", bottle:"Bottle", glass:"Glass", tax:"All prices include tax.", close:"Close", empty:"Our list is being updated", emptySub:"Please ask our staff for today's selection.", vintage:"Vintage", hint:"Press and hold the store name for staff mode"},
+  zh:{book:"菜单册", tour:"游览", list:"酒单", lines:"菜单一览", price:"价格", all:"全部", bottle:"整瓶", glass:"单杯", tax:"价格均已含税。", close:"关闭", empty:"酒单更新中", emptySub:"请向服务人员咨询。", vintage:"年份", hint:"长按店名进入管理画面"},
 };
 const SHEET_LANG = {all:"全言語共通", ja:"日本語版", en:"英語版", zh:"中国語版"};
 // Image pages come in "books": the original menu book, and the tour pages. Old pages have no `book` and belong to the menu book.
@@ -388,7 +403,7 @@ const LS = {
 
 /* ---------------- state ---------------- */
 const S = {
-  stores: [], items: [], sheets: [], aTab: "items", db: null, assets: null, sample: null, live: false,
+  stores: [], items: [], sheets: [], lines: [], aTab: "items", db: null, assets: null, sample: null, live: false,
   view: "menu", lang: LS.get("wm.lang", "ja"), storeId: LS.get("wm.store", ""),
   menuCat: "all", aStore: "all", q: "", fCat: "all", fState: "all", loaded: false,
 };
@@ -438,6 +453,18 @@ async function deleteItem(id){
   S.items = S.items.filter(x => x.id !== id); render();
   if (S.live){ const it = S.items.find(x => x.id === id); await API.del("items", id); }
 }
+// text-only menu lines share the headings (見出し) and the manual order rule of the photo items
+async function saveLine(ln){
+  ln.updatedAt = new Date().toISOString();
+  const i = S.lines.findIndex(x => x.id === ln.id);
+  if (i >= 0) S.lines[i] = ln; else S.lines.push(ln);
+  S.lines.sort(sortItems); render();
+  if (S.live) await API.put("lines", ln);
+}
+async function deleteLine(id){
+  S.lines = S.lines.filter(x => x.id !== id); render();
+  if (S.live) await API.del("lines", id);
+}
 async function saveSheet(sh){
   const i = S.sheets.findIndex(x => x.id === sh.id);
   if (i >= 0) S.sheets[i] = sh; else S.sheets.push(sh);
@@ -462,10 +489,12 @@ async function deleteStore(id){
   S.stores = S.stores.filter(x => x.id !== id);
   const touched = S.items.filter(it => (it.stores || []).includes(id));
   touched.forEach(it => it.stores = it.stores.filter(s => s !== id));
+  if (!S.live) S.lines.forEach(ln => { if ((ln.stores || []).includes(id)) ln.stores = ln.stores.filter(s => s !== id); });
   render();
   if (S.live){
     await API.del("stores", id);
     for (const it of touched){ await API.put("items", it); }
+    for (const ln of S.lines.filter(x => (x.stores || []).includes(id))){ ln.stores = ln.stores.filter(s => s !== id); await API.put("lines", ln); }
     for (const sh of S.sheets.filter(x => (x.stores || []).includes(id))){ sh.stores = sh.stores.filter(s => s !== id); await API.put("sheets", sh); }
   }
 }
@@ -496,6 +525,7 @@ function applyData(d){
   else setCats(DEFAULT_CATS.map((c, i) => ({...c, order: i})));
   S.items = fillOrder(d.items || []).sort(sortItems);
   S.sheets = (d.sheets || []).sort((a,b) => (a.order ?? 0) - (b.order ?? 0));
+  S.lines = (d.lines || []).sort(sortItems);
   S.version = d.version;
   if (d.me){ S.role = d.me.role; S.myStore = d.me.storeId || null; if (S.role === "store") S.aStore = S.myStore; }
 }
@@ -628,13 +658,16 @@ function renderMenu(){
   $("#mHint").textContent = t.hint;
   const items = st ? S.items.filter(it => it.active !== false && (it.stores || []).includes(st.id)) : [];
   const books = {book: st ? menuSheets(st.id, L, "book") : [], tour: st ? menuSheets(st.id, L, "tour") : []};
+  const lines = st ? S.lines.filter(ln => ln.active !== false && (ln.stores || []).includes(st.id) && lineName(ln, L)) : [];
   const cats = CATS.filter(c => items.some(it => it.cat === c.id));
   if (books[S.menuCat] && !books[S.menuCat].length) S.menuCat = "all";
-  if (S.menuCat !== "all" && !books[S.menuCat] && !cats.some(c => c.id === S.menuCat)) S.menuCat = "all";
-  if (S.menuCat === "all" && !items.length) S.menuCat = books.book.length ? "book" : books.tour.length ? "tour" : "all";
+  if (S.menuCat === "lines" && !lines.length) S.menuCat = "all";
+  if (S.menuCat !== "all" && S.menuCat !== "lines" && !books[S.menuCat] && !cats.some(c => c.id === S.menuCat)) S.menuCat = "all";
+  if (S.menuCat === "all" && !items.length) S.menuCat = lines.length ? "lines" : books.book.length ? "book" : books.tour.length ? "tour" : "all";
   const tabs = [];
   if (items.length) tabs.push(`<button type="button" data-mcat="all" aria-pressed="${S.menuCat==="all"}">${esc(t.all)}<span class="n num">${items.length}</span></button>`);
   if (items.length) cats.forEach(c => tabs.push(`<button type="button" data-mcat="${c.id}" aria-pressed="${S.menuCat===c.id}">${esc(c[L])}<span class="n num">${items.filter(i=>i.cat===c.id).length}</span></button>`));
+  if (lines.length) tabs.push(`<button type="button" data-mcat="lines" aria-pressed="${S.menuCat==="lines"}">${esc(t.lines)}<span class="n num">${lines.length}</span></button>`);
   for (const k of ["book", "tour"]) if (books[k].length) tabs.push(`<button type="button" data-mcat="${k}" aria-pressed="${S.menuCat===k}">${esc(t[k])}<span class="n num">${books[k].length}</span></button>`);
   $("#mTabs").innerHTML = tabs.join("");
   $("#mTabs").hidden = tabs.length < 2;
@@ -642,6 +675,7 @@ function renderMenu(){
     $("#mBody").innerHTML = `<div class="m-book">${books[S.menuCat].map(sh => `<button type="button" data-sheet="${esc(sh.id)}"><img src="${esc(sh.photo)}" alt="${esc(sh.title || t[S.menuCat])}" loading="lazy"></button>`).join("")}</div>`;
     return;
   }
+  if (S.menuCat === "lines"){ $("#mBody").innerHTML = linesHTML(lines, L, t); return; }
   if (!items.length){
     $("#mBody").innerHTML = S.loaded ? `<div class="m-empty"><strong>${esc(t.empty)}</strong>${esc(t.emptySub)}</div>` : `<div class="m-empty">…</div>`;
     return;
@@ -654,6 +688,30 @@ function renderMenu(){
     return `<section class="m-sec">
       <div class="sec-head"><div class="script">Line up</div><div class="flank"><span class="orn"></span><h2>${esc(c[L])}</h2><span class="orn r"></span></div>${sub && sub !== c[L] ? `<div class="sub">${esc(sub)}</div>` : ""}</div>
       <div class="tiles">${list.map(it => card(it, L, t)).join("")}</div>
+    </section>`;
+  }).join("");
+}
+// the name shown for a text-only line: the guest's language first, then English, then Japanese
+function lineName(ln, L){ return (L === "ja" ? ln.name_ja || ln.name_en : L === "zh" ? ln.name_zh || ln.name_en || ln.name_ja : ln.name_en || ln.name_ja) || ""; }
+function lineDesc(ln, L){ return ln["desc_" + L] || (L === "zh" ? ln.desc_en : "") || ln.desc_en || ln.desc_ja || ""; }
+function linesHTML(lines, L, t){
+  const groups = CATS.map(c => ({c, list: lines.filter(ln => ln.cat === c.id)}));
+  const orphans = lines.filter(ln => !CAT[ln.cat]);
+  if (orphans.length) groups.push({c: catOf(""), list: orphans});
+  return groups.filter(g => g.list.length).map(({c, list}) => {
+    const sub = L === "en" ? c.ja : c.en;
+    return `<section class="m-sec tl-sec">
+      <div class="sec-head"><div class="script">Menu List</div><div class="flank"><span class="orn"></span><h2>${esc(c[L])}</h2><span class="orn r"></span></div>${sub && sub !== c[L] ? `<div class="sub">${esc(sub)}</div>` : ""}</div>
+      <div class="tl">${list.map(ln => {
+        const name = lineName(ln, L);
+        // under the name, the English name for Japanese / Chinese guests, the Japanese name for English guests
+        const alt = L === "en" ? (ln.name_ja && ln.name_ja !== name ? ln.name_ja : "") : (ln.name_en && ln.name_en !== name ? ln.name_en : "");
+        const desc = lineDesc(ln, L);
+        const pr = ln.price_glass && ln.price
+          ? `<span><small>${esc(t.glass)}</small>${yen(ln.price_glass)}</span><span><small>${esc(t.bottle)}</small>${yen(ln.price)}</span>`
+          : `<span>${yen(ln.price || ln.price_glass)}</span>`;
+        return `<div class="tl-row"><div class="mi-line"><span class="mi-name">${esc(name)}</span><span class="lead"></span><span class="mi-pr">${pr}</span></div>${alt ? `<span class="tl-alt">${esc(alt)}</span>` : ""}${desc ? `<div class="tl-desc">${esc(desc)}</div>` : ""}</div>`;
+      }).join("")}</div>
     </section>`;
   }).join("");
 }
@@ -701,21 +759,22 @@ function openDetail(id){
 function closeOverlay(){ $("#overlay").innerHTML = ""; }
 
 /* ===== admin ===== */
-function adminFiltered(){
+function adminFiltered(kind){
   const q = S.q.trim().toLowerCase();
-  return S.items.filter(it =>
+  return (kind === "lines" ? S.lines : S.items).filter(it =>
     (S.aStore === "all" || (it.stores || []).includes(S.aStore)) &&
     (S.fCat === "all" || it.cat === S.fCat) &&
     (S.fState === "all" || (S.fState === "on") === (it.active !== false)) &&
-    (!q || [it.name, it.name_ja, it.name_zh, it.region, it.vintage, it.grape].join(" ").toLowerCase().includes(q)));
+    (!q || [it.name, it.name_ja, it.name_en, it.name_zh, it.region, it.vintage, it.grape].join(" ").toLowerCase().includes(q)));
 }
 function renderAdmin(){
   document.documentElement.lang = "ja";
   document.querySelectorAll("[data-atab]").forEach(b => b.setAttribute("aria-pressed", b.dataset.atab === S.aTab));
-  $("#itemTools").hidden = S.aTab !== "items";
-  $("#tableArea").hidden = S.aTab !== "items";
+  const tableTab = S.aTab === "items" || S.aTab === "lines";
+  $("#itemTools").hidden = !tableTab;
+  $("#tableArea").hidden = !tableTab;
   $("#sheetArea").hidden = !isImgTab();
-  $("#btnAdd").textContent = S.aTab === "items" ? "＋ 商品を追加" : S.aTab === "tour" ? "＋ ツアー画像を追加" : "＋ JPEGメニューを追加";
+  $("#btnAdd").textContent = S.aTab === "items" ? "＋ 商品を追加" : S.aTab === "lines" ? "＋ 文字メニューを追加" : S.aTab === "tour" ? "＋ ツアー画像を追加" : "＋ JPEGメニューを追加";
   $("#btnCats").hidden = !isMaster(); $("#btnStores").hidden = !isMaster();
   const mine = S.stores.find(x => x.id === S.myStore);
   $("#roleLabel").textContent = isMaster() ? "マスター管理（全店舗）" : `${mine ? mine.name : "店舗"} の管理`;
@@ -727,6 +786,8 @@ function renderAdmin(){
   fc.innerHTML = `<option value="all">すべての見出し</option>` + CATS.map(c => `<option value="${esc(c.id)}">${esc(c.ja)}</option>`).join("");
   if (S.fCat !== "all" && !CAT[S.fCat]) S.fCat = "all";
   fc.value = S.fCat;
+  $("#q").placeholder = S.aTab === "lines" ? "商品名で検索" : "商品名・産地で検索";
+  if (S.aTab === "lines") return renderLinesAdmin();
   const list = adminFiltered();
   $("#count").textContent = `${list.length} 件 / 全 ${S.items.length} 件`;
   if (!S.loaded){ $("#tableArea").innerHTML = `<div class="tablewrap"><div class="empty">読み込み中…</div></div>`; return; }
@@ -748,6 +809,91 @@ function renderAdmin(){
       <td class="keep"><button type="button" class="switch" role="switch" aria-checked="${on}" aria-label="提供中" ${ok ? "" : "disabled"} data-toggle="${esc(it.id)}"></button><span class="swlabel">${on ? "提供中" : "休止中"}</span></td>
       <td class="keep">${ok ? `<button type="button" class="btn" data-edit="${esc(it.id)}">編集</button>` : ""}</td></tr>`;
     }).join("")}</tbody></table></div>`;
+}
+
+/* ----- text-only menu (no photos) ----- */
+function renderLinesAdmin(){
+  const list = adminFiltered("lines");
+  const area = $("#tableArea");
+  $("#count").textContent = `${list.length} 件 / 全 ${S.lines.length} 件`;
+  if (!S.loaded){ area.innerHTML = `<div class="tablewrap"><div class="empty">読み込み中…</div></div>`; return; }
+  if (!S.stores.length && isMaster()){ area.innerHTML = `<div class="tablewrap"><div class="empty"><strong>まず店舗を登録しましょう</strong><button class="btn primary" type="button" data-act="stores">店舗を追加する</button></div></div>`; return; }
+  const sname = id => (S.stores.find(s => s.id === id) || {}).name;
+  const intro = `<p class="mv-hint">写真を使わず、商品名と価格（必要なら説明）だけを並べたメニューです。iPadでは「メニュー一覧」のボタンで表示されます。見出しは写真付きの商品と共通です（${isMaster() ? "「見出しの管理」で追加・変更できます" : "見出しの追加は本部が行います"}）。「↑」「↓」で同じ見出しの中の順番を入れ替えられます。</p>`;
+  if (!list.length){ area.innerHTML = intro + `<div class="tablewrap"><div class="empty"><strong>${S.lines.length ? "条件に合うメニューがありません" : "まだ文字だけのメニューがありません"}</strong>右上の「＋ 文字メニューを追加」から、商品名と価格を入力してください。</div></div>`; return; }
+  area.innerHTML = intro + `<div class="tablewrap"><table><thead><tr><th>並び順</th><th>商品名</th><th>見出し</th><th>店舗</th><th class="price">価格</th><th>提供</th><th></th></tr></thead><tbody>${
+    list.map((ln, i) => {
+      const on = ln.active !== false, ok = canEdit(ln);
+      const up = ok && list[i - 1] && list[i - 1].cat === ln.cat, down = ok && list[i + 1] && list[i + 1].cat === ln.cat;
+      const miss = [!ln.name_en && "英", !ln.name_zh && "中"].filter(Boolean);
+      const pr = ln.price_glass && ln.price ? `グラス ${yen(ln.price_glass)}<br>ボトル ${yen(ln.price)}` : yen(ln.price || ln.price_glass) || "—";
+      return `<tr class="${on ? "" : "off"}"><td class="keep"><div class="mv"><button type="button" class="btn" data-lmove="${esc(ln.id)}" data-dir="-1" ${up ? "" : "disabled"} aria-label="上へ" title="1つ上へ">↑</button><button type="button" class="btn" data-lmove="${esc(ln.id)}" data-dir="1" ${down ? "" : "disabled"} aria-label="下へ" title="1つ下へ">↓</button></div></td>
+      <td><div class="iname">${esc(ln.name_ja || ln.name_en || ln.name_zh)}${ok ? "" : ' <span class="tag" title="複数店舗で共通のメニューは、本部（マスター）が管理します">本部管理</span>'}</div><div class="isub">${esc([ln.name_ja && ln.name_en, ln.name_zh].filter(Boolean).join(" · "))}${miss.length ? ` <span class="tag">名前 未翻訳: ${miss.join("・")}</span>` : ""}</div></td>
+      <td><span class="tag">${esc(catOf(ln.cat).ja)}</span></td>
+      <td class="isub">${esc((ln.stores||[]).map(sname).filter(Boolean).join("、") || "未設定")}</td>
+      <td class="price num">${pr}</td>
+      <td class="keep"><button type="button" class="switch" role="switch" aria-checked="${on}" aria-label="提供中" ${ok ? "" : "disabled"} data-ltoggle="${esc(ln.id)}"></button><span class="swlabel">${on ? "提供中" : "休止中"}</span></td>
+      <td class="keep">${ok ? `<button type="button" class="btn" data-ledit="${esc(ln.id)}">編集</button>` : ""}</td></tr>`;
+    }).join("")}</tbody></table></div>`;
+}
+function openLineEditor(id, keep){
+  const src = id ? S.lines.find(x => x.id === id) : null;
+  const E = src ? JSON.parse(JSON.stringify(src)) : {id: rid("l"), cat: (keep && keep.cat) || (S.fCat !== "all" ? S.fCat : (CATS[0] || {}).id || "other"), active: true,
+    stores: (keep && keep.stores) || (S.aStore !== "all" ? [S.aStore] : S.stores.map(s => s.id))};
+  const v = k => esc(E[k] ?? "");
+  $("#overlay").innerHTML = `<div class="scrim" data-close="1"></div><aside class="drawer" role="dialog" aria-modal="true" aria-labelledby="lnTitle">
+  <div class="d-head"><h2 id="lnTitle">${src ? "文字メニューを編集" : "文字メニューを追加"}</h2><button type="button" class="btn ghost" data-close="1">閉じる</button></div>
+  <div class="d-body">
+    ${keep ? `<span class="msg" style="color:var(--ok)">保存しました。続けて次の商品を入力できます。</span>` : ""}
+    <div class="field"><label for="lCat">見出し（カテゴリ）</label><select id="lCat">${CATS.map(c => `<option value="${esc(c.id)}" ${E.cat===c.id?"selected":""}>${esc(c.ja)}</option>`).join("")}${CAT[E.cat] ? "" : `<option value="${esc(E.cat)}" selected>（削除された見出し）</option>`}</select></div>
+    <div class="langblock">
+      <span class="flabel">商品名（日本語・英語・中国語）</span>
+      <div class="field"><label for="lNJ">日本語</label><input id="lNJ" value="${v("name_ja")}" placeholder="例: 自家製ピクルス"></div>
+      <div class="field"><label for="lNE">English</label><input id="lNE" value="${v("name_en")}" placeholder="Homemade Pickles"></div>
+      <div class="field"><label for="lNZ">中文</label><input id="lNZ" value="${v("name_zh")}" placeholder="自制腌菜"></div>
+      <span class="hint">どれか1つは必ず入力してください。英語・中国語が空欄のときは、入力されている名前がそのまま表示されます。</span>
+    </div>
+    <div class="row">
+      <div class="field"><label for="lP">価格（円）</label><input id="lP" class="num" inputmode="numeric" value="${v("price")}" placeholder="例: 1200"></div>
+      <div class="field"><label for="lPG">グラス価格（円・ワインなど）</label><input id="lPG" class="num" inputmode="numeric" value="${v("price_glass")}" placeholder="空欄でかまいません"></div>
+    </div>
+    <span class="hint" style="margin-top:-8px">グラス価格も入れると、iPadでは「グラス」と「ボトル」の2つの価格が並びます。</span>
+    <div class="langblock">
+      <span class="flabel">説明（必要なときだけ）</span>
+      <div class="field"><label for="lDJ">日本語</label><textarea id="lDJ" placeholder="空欄でかまいません">${v("desc_ja")}</textarea></div>
+      <div class="field"><label for="lDE">English</label><textarea id="lDE">${v("desc_en")}</textarea></div>
+      <div class="field"><label for="lDZ">中文</label><textarea id="lDZ">${v("desc_zh")}</textarea></div>
+    </div>
+    <div class="field" ${isMaster() ? "" : "hidden"}><span class="flabel">表示する店舗</span><div class="checks">${S.stores.map(s => `<label><input type="checkbox" name="lSt" value="${esc(s.id)}" ${(E.stores||[]).includes(s.id)?"checked":""}>${esc(s.name)}</label>`).join("") || '<span class="hint">店舗が未登録です</span>'}</div></div>
+    <label class="checks"><label><input type="checkbox" id="lAct" ${E.active!==false?"checked":""}>提供中（外すとお客様画面に表示されません）</label></label>
+  </div>
+  <div class="d-foot">${src ? `<button type="button" class="btn danger" id="lDel">削除</button>` : ""}<span class="spacer"></span><span class="msg err" id="lErr"></span><button type="button" class="btn" data-close="1">キャンセル</button>${src ? "" : `<button type="button" class="btn" id="lSaveNext">保存して続けて追加</button>`}<button type="button" class="btn primary" id="lSave">保存</button></div>
+  </aside>`;
+  $("#lNJ").focus();
+  const num = s => { const n = String(s).normalize("NFKC").replace(/[^\d]/g, ""); return n ? Number(n) : null; };
+  const save = async next => {
+    Object.assign(E, {cat: $("#lCat").value, name_ja: $("#lNJ").value.trim(), name_en: $("#lNE").value.trim(), name_zh: $("#lNZ").value.trim(),
+      price: num($("#lP").value), price_glass: num($("#lPG").value),
+      desc_ja: $("#lDJ").value.trim(), desc_en: $("#lDE").value.trim(), desc_zh: $("#lDZ").value.trim(),
+      stores: isMaster() ? [...document.querySelectorAll('input[name="lSt"]:checked')].map(c => c.value) : [S.myStore], active: $("#lAct").checked});
+    const err = $("#lErr");
+    if (!E.name_ja && !E.name_en && !E.name_zh){ err.textContent = "商品名を入力してください。"; $("#lNJ").focus(); return; }
+    if (!E.price && !E.price_glass){ err.textContent = "価格を入力してください。"; $("#lP").focus(); return; }
+    if (isMaster() && !E.stores.length){ err.textContent = "表示する店舗を1つ以上選んでください。"; return; }
+    // a new line, or one moved to another heading, goes to the end of its heading
+    const prev = S.lines.find(x => x.id === E.id);
+    if (!prev || prev.cat !== E.cat || !hasOrder(E)) E.order = Date.now();
+    document.querySelectorAll("#lSave,#lSaveNext").forEach(b => b.disabled = true); err.textContent = "";
+    try{ await saveLine(E); if (next) openLineEditor(null, {cat: E.cat, stores: E.stores}); else closeOverlay(); }
+    catch(e){ document.querySelectorAll("#lSave,#lSaveNext").forEach(b => b.disabled = false); err.textContent = "保存できませんでした（" + (e.code || "エラー") + "）。もう一度お試しください。"; }
+  };
+  $("#lSave").addEventListener("click", () => save(false));
+  const sn = $("#lSaveNext"); if (sn) sn.addEventListener("click", () => save(true));
+  const del = $("#lDel");
+  if (del) del.addEventListener("click", async () => {
+    if (!del.classList.contains("armed")){ del.classList.add("armed"); del.textContent = "もう一度押すと削除"; return; }
+    try{ await deleteLine(E.id); closeOverlay(); }catch(e){ $("#lErr").textContent = "削除できませんでした（" + (e.code || "エラー") + "）。"; }
+  });
 }
 
 /* ----- designer JPEG menus ----- */
@@ -813,8 +959,9 @@ function openSheetEditor(id){
   });
 }
 // move an item one place up (-1) or down (+1) within its heading, as shown in the current list
-async function moveItem(id, dir){
-  const list = adminFiltered();
+async function moveItem(id, dir, kind){
+  const lines = kind === "lines", save = lines ? saveLine : saveItem;
+  const list = adminFiltered(kind);
   const i = list.findIndex(x => x.id === id), it = list[i], nb = list[i + dir];
   if (!it || !nb || nb.cat !== it.cat || !canEdit(it)) return;
   const far = list[i + 2 * dir];
@@ -823,15 +970,15 @@ async function moveItem(id, dir){
   try{
     if (order > Math.min(nb.order, edge) && order < Math.max(nb.order, edge)){
       const next = {...it, order}; delete next.sample;
-      await saveItem(next);
+      await save(next);
       return;
     }
     // no room left between the two neighbours: renumber the whole heading (master only)
     if (!isMaster()){ banner("この位置へは移動できませんでした。本部（マスター）にご連絡ください。"); return; }
-    const all = S.items.filter(x => x.cat === it.cat && x.id !== it.id);
+    const all = (lines ? S.lines : S.items).filter(x => x.cat === it.cat && x.id !== it.id);
     const k = all.findIndex(x => x.id === nb.id);
     all.splice(dir < 0 ? k : k + 1, 0, it);
-    for (let n = 0; n < all.length; n++) if (all[n].order !== n + 1) await saveItem({...all[n], order: n + 1});
+    for (let n = 0; n < all.length; n++) if (all[n].order !== n + 1) await save({...all[n], order: n + 1});
   }catch(e){ banner("並び順を保存できませんでした（" + (e.code || "エラー") + "）。もう一度お試しください。"); }
 }
 function adminSheets(){
@@ -997,7 +1144,7 @@ Do not add facts that are not in the input.`, {modelTier: "quick"});
 let CM_DIRTY = false;
 function openCats(){
   CM_DIRTY = false;
-  const used = id => S.items.filter(it => it.cat === id).length;
+  const used = id => S.items.filter(it => it.cat === id).length + S.lines.filter(ln => ln.cat === id).length;
   $("#overlay").innerHTML = `<div class="scrim" data-close="1"></div><aside class="drawer" role="dialog" aria-modal="true" aria-labelledby="ctTitle">
   <div class="d-head"><h2 id="ctTitle">見出し（カテゴリ）の管理</h2><button type="button" class="btn ghost" data-close="1">閉じる</button></div>
   <div class="d-body">
@@ -1197,6 +1344,13 @@ document.addEventListener("click", async e => {
   if (d.ctr) return translateCat(d.ctr, el);
   if (d.smove) return moveSheet(d.smove, Number(d.dir));
   if (d.imove) return moveItem(d.imove, Number(d.dir));
+  if (d.lmove) return moveItem(d.lmove, Number(d.dir), "lines");
+  if (d.ledit) return openLineEditor(d.ledit);
+  if (d.ltoggle){
+    const ln = S.lines.find(x => x.id === d.ltoggle); if (!ln) return;
+    try{ await saveLine({...ln, active: ln.active === false}); }catch(err){ banner("切り替えを保存できませんでした（" + (err.code || "エラー") + "）。"); }
+    return;
+  }
   if (d.astore){ S.aStore = d.astore; renderAdmin(); return; }
   if (d.edit) return openEditor(d.edit);
   if (d.photo){ ROW_PHOTO = d.photo; $("#rowFile").value = ""; $("#rowFile").click(); return; }
@@ -1240,6 +1394,7 @@ document.addEventListener("click", async e => {
 $("#btnAdd").addEventListener("click", () => {
   if (!S.stores.length && isMaster()) return openStores();
   if (isImgTab()){ const f = $("#sFiles"); if (f) f.click(); return; }
+  if (S.aTab === "lines") return openLineEditor(null);
   openEditor(null);
 });
 $("#btnStores").addEventListener("click", openStores);
