@@ -265,7 +265,7 @@ tr.off td:not(.keep){opacity:.45}
 .lang-ja .tl-row .mi-name{font-family:var(--f-serif-ja);letter-spacing:.08em}
 .lang-zh .tl-row .mi-name{font-family:var(--f-serif-zh);letter-spacing:.08em}
 .tl-alt{display:block;margin-top:2px;font-family:var(--f-display);font-style:italic;font-size:15px;color:var(--c-grape,var(--m-muted));line-height:1.4}
-.lang-en .tl-alt{font-family:var(--f-serif-ja);font-style:normal;font-size:13px;letter-spacing:.06em}
+.lang-en .tl-alt,.lang-zh .tl-alt{font-family:var(--f-serif-ja);font-style:normal;font-size:13px;letter-spacing:.06em}
 .tl-desc{margin-top:6px;font-size:13px;line-height:1.8;color:var(--c-desc,var(--m-fg));opacity:.75;white-space:pre-wrap;max-width:640px}
 .lang-en .tl-desc{font-family:var(--f-display);font-size:16px;line-height:1.6}
 .lang-ja .tl-desc{font-family:var(--f-serif-ja)}
@@ -742,8 +742,9 @@ function linesHTML(lines, L, t){
       <button type="button" class="tl-hd" ${single ? "disabled" : `data-tlsec="${esc(c.id)}"`} aria-expanded="${open}" aria-controls="${bid}"><h2>${esc(c[L])}</h2>${sub && sub !== c[L] ? `<span class="sub">${esc(sub)}</span>` : ""}<span class="cnt">${list.length}</span>${single ? "" : `<span class="chev" aria-hidden="true"></span>`}</button>
       <div class="tl" id="${bid}" ${open ? "" : "hidden"}>${list.map(ln => {
         const name = lineName(ln, L);
-        // under the name, the English name for Japanese / Chinese guests, the Japanese name for English guests
-        const alt = L === "en" ? (ln.name_ja && ln.name_ja !== name ? ln.name_ja : "") : (ln.name_en && ln.name_en !== name ? ln.name_en : "");
+        // under the name: the English name for Japanese guests, the Japanese name for English and Chinese guests
+        const sub = L === "ja" ? ln.name_en : ln.name_ja;
+        const alt = sub && sub !== name ? sub : "";
         const desc = lineDesc(ln, L);
         const pr = ln.price_glass && ln.price
           ? `<span><small>${esc(t.glass)}</small>${yen(ln.price_glass)}</span><span><small>${esc(t.bottle)}</small>${yen(ln.price)}</span>`
