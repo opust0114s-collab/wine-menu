@@ -180,6 +180,15 @@ tr.off td:not(.keep){opacity:.45}
 .m-tabs button[aria-pressed="true"]{color:var(--c-tabon,var(--m-fg))}
 .m-tabs button[aria-pressed="true"]::after{content:"";position:absolute;left:50%;bottom:6px;width:5px;height:5px;background:var(--m-gold);transform:translateX(-50%) rotate(45deg)}
 .m-tabs .n{display:none}
+/* many headings: the tab row folds into one "Category" button that opens the full list */
+.m-tabs.folded{flex-direction:column;align-items:center;gap:0;padding-top:18px}
+.m-tabs.folded .m-tabtoggle{display:inline-flex;align-items:center;gap:14px;border:1px solid var(--m-line);padding:11px 22px;margin-bottom:14px;letter-spacing:.16em}
+.m-tabtoggle .lbl{font-size:10px;letter-spacing:.24em;color:var(--c-tab,var(--m-muted))}
+.m-tabtoggle b{font-weight:500;color:var(--c-head,var(--m-fg))}
+.m-tabtoggle .chev{width:8px;height:8px;border-right:1px solid var(--m-gold);border-bottom:1px solid var(--m-gold);transform:rotate(45deg) translate(-2px,-2px);transition:transform .2s}
+.m-tabtoggle[aria-expanded="true"] .chev{transform:rotate(-135deg) translate(-2px,-2px)}
+.m-tabtoggle::after{display:none}
+.m-tabpanel{display:flex;justify-content:center;flex-wrap:wrap;gap:4px 8px;max-width:900px;padding-bottom:6px}
 .m-body{flex:1;padding-block:44px 56px;display:grid;gap:84px}
 .m-sec{display:grid;grid-template-columns:minmax(0,1fr);gap:40px;max-width:1080px;width:100%;margin:0 auto}
 .m-sec.has-feat{grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:64px;align-items:center}
@@ -400,9 +409,9 @@ let CAT = Object.fromEntries(CATS.map(c => [c.id, c]));
 function setCats(list){ CATS = list; CAT = Object.fromEntries(CATS.map(c => [c.id, c])); }
 const catOf = id => CAT[id] || {id, ja:"その他", en:"Others", zh:"其他", style:"other"};
 const T = {
-  ja:{book:"メニューブック", tour:"ツアー", list:"ドリンクリスト", lines:"メニュー一覧", price:"価格", openAll:"すべて開く", closeAll:"すべて閉じる", all:"すべて", bottle:"ボトル", glass:"グラス", tax:"表示価格は税込です。", close:"閉じる", empty:"ただいまメニューを準備中です", emptySub:"スタッフにお声がけください。", vintage:"ヴィンテージ", hint:"店名を長押しすると管理画面に戻ります"},
-  en:{book:"Menu Book", tour:"Tour", list:"Wine & Spirits", lines:"Menu List", price:"Price", openAll:"Expand All", closeAll:"Collapse All", all:"All", bottle:"Bottle", glass:"Glass", tax:"All prices include tax.", close:"Close", empty:"Our list is being updated", emptySub:"Please ask our staff for today's selection.", vintage:"Vintage", hint:"Press and hold the store name for staff mode"},
-  zh:{book:"菜单册", tour:"游览", list:"酒单", lines:"菜单一览", price:"价格", openAll:"全部展开", closeAll:"全部收起", all:"全部", bottle:"整瓶", glass:"单杯", tax:"价格均已含税。", close:"关闭", empty:"酒单更新中", emptySub:"请向服务人员咨询。", vintage:"年份", hint:"长按店名进入管理画面"},
+  ja:{book:"メニューブック", tour:"ツアー", list:"ドリンクリスト", lines:"メニュー一覧", price:"価格", openAll:"すべて開く", closeAll:"すべて閉じる", category:"カテゴリー", all:"すべて", bottle:"ボトル", glass:"グラス", tax:"表示価格は税込です。", close:"閉じる", empty:"ただいまメニューを準備中です", emptySub:"スタッフにお声がけください。", vintage:"ヴィンテージ", hint:"店名を長押しすると管理画面に戻ります"},
+  en:{book:"Menu Book", tour:"Tour", list:"Wine & Spirits", lines:"Menu List", price:"Price", openAll:"Expand All", closeAll:"Collapse All", category:"Category", all:"All", bottle:"Bottle", glass:"Glass", tax:"All prices include tax.", close:"Close", empty:"Our list is being updated", emptySub:"Please ask our staff for today's selection.", vintage:"Vintage", hint:"Press and hold the store name for staff mode"},
+  zh:{book:"菜单册", tour:"游览", list:"酒单", lines:"菜单一览", price:"价格", openAll:"全部展开", closeAll:"全部收起", category:"类别", all:"全部", bottle:"整瓶", glass:"单杯", tax:"价格均已含税。", close:"关闭", empty:"酒单更新中", emptySub:"请向服务人员咨询。", vintage:"年份", hint:"长按店名进入管理画面"},
 };
 const SHEET_LANG = {all:"全言語共通", ja:"日本語版", en:"英語版", zh:"中国語版"};
 // Image pages come in "books": the original menu book, and the tour pages. Old pages have no `book` and belong to the menu book.
@@ -422,7 +431,7 @@ const LS = {
 const S = {
   stores: [], items: [], sheets: [], lines: [], aTab: "items", db: null, assets: null, sample: null, live: false,
   view: "menu", lang: LS.get("wm.lang", "ja"), storeId: LS.get("wm.store", ""),
-  menuCat: "all", tlOpen: new Set(), aStore: "all", q: "", fCat: "all", fState: "all", loaded: false,
+  menuCat: "all", tabsOpen: false, tlOpen: new Set(), aStore: "all", q: "", fCat: "all", fState: "all", loaded: false,
 };
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -681,12 +690,18 @@ function renderMenu(){
   if (S.menuCat === "lines" && !lines.length) S.menuCat = "all";
   if (S.menuCat !== "all" && S.menuCat !== "lines" && !books[S.menuCat] && !cats.some(c => c.id === S.menuCat)) S.menuCat = "all";
   if (S.menuCat === "all" && !items.length) S.menuCat = lines.length ? "lines" : books.book.length ? "book" : books.tour.length ? "tour" : "all";
-  const tabs = [];
-  if (items.length) tabs.push(`<button type="button" data-mcat="all" aria-pressed="${S.menuCat==="all"}">${esc(t.all)}<span class="n num">${items.length}</span></button>`);
-  if (items.length) cats.forEach(c => tabs.push(`<button type="button" data-mcat="${c.id}" aria-pressed="${S.menuCat===c.id}">${esc(c[L])}<span class="n num">${items.filter(i=>i.cat===c.id).length}</span></button>`));
-  if (lines.length) tabs.push(`<button type="button" data-mcat="lines" aria-pressed="${S.menuCat==="lines"}">${esc(t.lines)}<span class="n num">${lines.length}</span></button>`);
-  for (const k of ["book", "tour"]) if (books[k].length) tabs.push(`<button type="button" data-mcat="${k}" aria-pressed="${S.menuCat===k}">${esc(t[k])}<span class="n num">${books[k].length}</span></button>`);
-  $("#mTabs").innerHTML = tabs.join("");
+  const tabs = []; // [key, label]
+  if (items.length) tabs.push(["all", t.all]);
+  if (items.length) cats.forEach(c => tabs.push([c.id, c[L]]));
+  if (lines.length) tabs.push(["lines", t.lines]);
+  for (const k of ["book", "tour"]) if (books[k].length) tabs.push([k, t[k]]);
+  const tabBtns = tabs.map(([k, label]) => `<button type="button" data-mcat="${esc(k)}" aria-pressed="${S.menuCat===k}">${esc(label)}</button>`).join("");
+  // up to 4 buttons sit in one row; more fold into a single "Category" button so they don't fill the screen
+  const fold = tabs.length > 4, cur = tabs.find(([k]) => k === S.menuCat);
+  $("#mTabs").classList.toggle("folded", fold);
+  $("#mTabs").innerHTML = fold
+    ? `<button type="button" class="m-tabtoggle" data-mtabs="1" aria-expanded="${S.tabsOpen}" aria-controls="mTabPanel"><span class="lbl">${esc(t.category)}</span><b>${esc(cur ? cur[1] : t.all)}</b><span class="chev" aria-hidden="true"></span></button><div class="m-tabpanel" id="mTabPanel" ${S.tabsOpen ? "" : "hidden"}>${tabBtns}</div>`
+    : tabBtns;
   $("#mTabs").hidden = tabs.length < 2;
   if (books[S.menuCat]){
     $("#mBody").innerHTML = `<div class="m-book">${books[S.menuCat].map(sh => `<button type="button" data-sheet="${esc(sh.id)}"><img src="${esc(sh.photo)}" alt="${esc(sh.title || t[S.menuCat])}" loading="lazy"></button>`).join("")}</div>`;
@@ -1354,7 +1369,8 @@ document.addEventListener("click", async e => {
   const d = el.dataset;
   if (d.close && (e.target === el || el.tagName === "BUTTON")) return closeOverlay();
   if (d.lang){ S.lang = d.lang; LS.set("wm.lang", d.lang); renderMenu(); return; }
-  if (d.mcat){ S.menuCat = d.mcat; renderMenu(); window.scrollTo({top:0}); return; }
+  if (d.mtabs){ S.tabsOpen = !S.tabsOpen; renderMenu(); return; }
+  if (d.mcat){ S.menuCat = d.mcat; S.tabsOpen = false; renderMenu(); window.scrollTo({top:0}); return; }
   if (d.tlsec){ if (S.tlOpen.has(d.tlsec)) S.tlOpen.delete(d.tlsec); else S.tlOpen.add(d.tlsec); renderMenu(); return; }
   if (d.tlall){ S.tlOpen = d.tlall === "open" ? new Set(CATS.map(c => c.id).concat("other", "")) : new Set(); renderMenu(); return; }
   if (d.item) return openDetail(d.item);
